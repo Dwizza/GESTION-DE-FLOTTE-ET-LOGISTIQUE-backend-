@@ -5,7 +5,6 @@ import com.fleet_management_backend.dto.request.RegisterManagerRequest;
 import com.fleet_management_backend.dto.response.RegisterDriverResponse;
 import com.fleet_management_backend.dto.response.RegisterManagerResponse;
 import com.fleet_management_backend.service.AdminService;
-import com.fleet_management_backend.service.AuthService;
 import com.fleet_management_backend.service.DriverService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;

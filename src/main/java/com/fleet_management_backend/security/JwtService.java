@@ -22,7 +22,7 @@ public class JwtService {
     private final long refreshExpirationMs;
 
     public JwtService(String secret, long accessExpirationMs) {
-        this(secret, accessExpirationMs, 7L * 24 * 60 * 60 * 1000); // default 7 jours
+        this(secret, accessExpirationMs, 7L * 24 * 60 * 60 * 1000);
     }
 
     public JwtService(String secret, long accessExpirationMs, long refreshExpirationMs) {
@@ -37,9 +37,6 @@ public class JwtService {
         return buildToken(subject, finalClaims, accessExpirationMs);
     }
 
-    /**
-     * Refresh token JWT (long durée). DTO/endpoint/storage ماشي من مسؤولية هاد الكلاس.
-     */
     public String generateRefreshToken(String subject) {
         Map<String, Object> claims = new HashMap<>();
         claims.put(TOKEN_TYPE_CLAIM, REFRESH_TOKEN_TYPE);
