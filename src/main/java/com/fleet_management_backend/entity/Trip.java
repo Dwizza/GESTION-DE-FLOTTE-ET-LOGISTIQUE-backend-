@@ -39,7 +39,6 @@ public class Trip {
     @Column(nullable = false, unique = true)
     private String reference;
 
-    /** tel que dans le diagramme: createdByUserId (pas de relation explicite) */
     @Column(name = "created_by_user_id")
     private UUID createdByUserId;
 
