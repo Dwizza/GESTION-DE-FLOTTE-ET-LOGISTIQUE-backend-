@@ -26,7 +26,7 @@ public interface DriverMapper {
     @Mapping(source = "driver.phoneNumber", target = "phoneNumber")
     RegisterDriverResponse toRegisterDriverResponse(User user, Driver driver);
 
-    @Mapping(source = "user.id", target = "id")
+    @Mapping(source = "id", target = "id")
     @Mapping(source = "user.firstName", target = "firstName")
     @Mapping(source = "user.lastName", target = "lastName")
     @Mapping(source = "user.email", target = "email")

@@ -56,14 +56,14 @@ public class DriverService {
 
     @Transactional
     public void deleteDriver(UUID driverId) {
-        userRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
         Driver driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new RuntimeException("Driver not found"));
+        User user = driver.getUser();
 
         driverRepository.delete(driver);
-        userRepository.delete(driver.getUser());
+        if (user != null) {
+            userRepository.delete(user);
+        }
     }
 
     public List<DriverResponse> getAllDrivers() {

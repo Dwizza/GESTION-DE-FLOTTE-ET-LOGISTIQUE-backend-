@@ -15,8 +15,6 @@ public interface ClientMapper {
     Client toEntity(RegisterClientRequest dto);
 
     @Mapping(source = "user.id", target = "userId")
-    @Mapping(source = "user.firstName", target = "firstName")
-    @Mapping(source = "user.lastName", target = "lastName")
     @Mapping(source = "user.email", target = "email")
     @Mapping(source = "user.role", target = "role")
     @Mapping(source = "user.active", target = "active")

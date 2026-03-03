@@ -1,14 +1,20 @@
 package com.fleet_management_backend.controller;
 
 import com.fleet_management_backend.dto.request.RegisterDriverRequest;
+import com.fleet_management_backend.dto.request.RegisterClientRequest;
+import com.fleet_management_backend.dto.request.UpdateClientRequest;
+import com.fleet_management_backend.dto.response.RegisterClientResponse;
 import com.fleet_management_backend.dto.request.RegisterManagerRequest;
+import com.fleet_management_backend.dto.response.ClientResponse;
 import com.fleet_management_backend.dto.response.RegisterDriverResponse;
 import com.fleet_management_backend.dto.response.RegisterManagerResponse;
+import com.fleet_management_backend.repository.ClientRepository;
 import com.fleet_management_backend.service.AdminService;
 import com.fleet_management_backend.service.DriverService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -20,6 +26,8 @@ public class AdminController {
 
     private final AdminService adminService;
     private final DriverService driverService;
+    private final com.fleet_management_backend.service.TripService tripService;
+    private final ClientRepository clientRepository;
 
     @PostMapping("/create/manager")
     public ResponseEntity<RegisterManagerResponse> createManager(@Valid @RequestBody RegisterManagerRequest request) {
@@ -78,5 +86,46 @@ public class AdminController {
     public ResponseEntity<com.fleet_management_backend.dto.response.DriverResponse> updateDriver(@PathVariable UUID id,
             @Valid @RequestBody com.fleet_management_backend.dto.request.UpdateDriverRequest request) {
         return ResponseEntity.ok(driverService.updateDriver(id, request));
+    }
+
+    @GetMapping("/driver/{id}/trips")
+    public ResponseEntity<java.util.List<com.fleet_management_backend.dto.response.TripResponse>> getDriverTrips(
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(tripService.getTripsByDriverId(id));
+    }
+
+    @GetMapping("/clients")
+    @Transactional(readOnly = true)
+    public ResponseEntity<java.util.List<ClientResponse>> getAllClients() {
+        var clients = clientRepository.findAll().stream()
+                .map(c -> ClientResponse.builder()
+                        .id(c.getId())
+                        .companyName(c.getCompanyName())
+                        .address(c.getAddress())
+                        .phone(c.getPhone())
+                        .email(c.getUser().getEmail())
+                        .role(c.getUser().getRole().name())
+                        .build())
+                .toList();
+        return ResponseEntity.ok(clients);
+    }
+
+    @PostMapping("/create/client")
+    public ResponseEntity<RegisterClientResponse> createClient(@Valid @RequestBody RegisterClientRequest request) {
+        RegisterClientResponse client = adminService.createClient(request);
+        return ResponseEntity.ok(client);
+    }
+
+    @PutMapping("/clients/{id}")
+    public ResponseEntity<ClientResponse> updateClient(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateClientRequest request) {
+        return ResponseEntity.ok(adminService.updateClient(id, request));
+    }
+
+    @DeleteMapping("/clients/{id}")
+    public ResponseEntity<Void> deleteClient(@PathVariable UUID id) {
+        adminService.deleteClient(id);
+        return ResponseEntity.ok().build();
     }
 }
