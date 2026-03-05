@@ -4,5 +4,6 @@ public enum TripStatus {
     PLANNED,
     ONGOING,
     COMPLETED,
-    CANCELLED
+    CANCELLED,
+    REFUSED_BY_DRIVER
 }

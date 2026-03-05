@@ -64,6 +64,7 @@ public class TripResponse {
         private UUID id;
         private String registrationNumber;
         private String brand;
+        private com.fleet_management_backend.entity.enums.TruckStatus status;
     }
 
     @Data

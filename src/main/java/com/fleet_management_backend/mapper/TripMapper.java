@@ -47,6 +47,7 @@ public interface TripMapper {
                         .id(tt.getTruck().getId())
                         .registrationNumber(tt.getTruck().getRegistrationNumber())
                         .brand(tt.getTruck().getBrand())
+                        .status(tt.getTruck().getStatus())
                         .build())
                 .collect(Collectors.toList());
     }
