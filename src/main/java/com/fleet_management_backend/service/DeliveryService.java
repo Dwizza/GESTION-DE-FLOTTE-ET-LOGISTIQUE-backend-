@@ -18,87 +18,137 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
 public class DeliveryService {
 
-    private final DeliveryRepository deliveryRepository;
-    private final TripRepository tripRepository;
-    private final DeliveryCategoryRepository categoryRepository;
-    private final DeliveryMapper deliveryMapper;
+        private final DeliveryRepository deliveryRepository;
+        private final TripRepository tripRepository;
+        private final DeliveryCategoryRepository categoryRepository;
+        private final DeliveryMapper deliveryMapper;
 
-    @Transactional
-    public DeliveryResponse createDelivery(DeliveryRequest request) {
-        if (deliveryRepository.existsByReference(request.getReference())) {
-            throw new ConflictException("Delivery with reference " + request.getReference() + " already exists.");
+        @Transactional
+        public DeliveryResponse createDelivery(DeliveryRequest request) {
+                if (deliveryRepository.existsByReference(request.getReference())) {
+                        throw new ConflictException(
+                                        "Delivery with reference " + request.getReference() + " already exists.");
+                }
+
+                Trip trip = tripRepository.findById(request.getTripId())
+                                .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
+
+                validateTripCapacity(trip, request.getWeight(), request.getVolume(), null);
+
+                Delivery delivery = deliveryMapper.toEntity(request);
+                delivery.setTrip(trip);
+
+                if (request.getCategoryId() != null) {
+                        DeliveryCategory category = categoryRepository.findById(request.getCategoryId())
+                                        .orElseThrow(() -> new ResourceNotFoundException(
+                                                        "Delivery Category not found"));
+                        delivery.setCategory(category);
+                }
+
+                Delivery savedDelivery = deliveryRepository.save(delivery);
+                return deliveryMapper.toResponse(savedDelivery);
         }
 
-        Trip trip = tripRepository.findById(request.getTripId())
-                .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
-
-        Delivery delivery = deliveryMapper.toEntity(request);
-        delivery.setTrip(trip);
-
-        if (request.getCategoryId() != null) {
-            DeliveryCategory category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Delivery Category not found"));
-            delivery.setCategory(category);
+        public List<DeliveryResponse> getAllDeliveries() {
+                return deliveryRepository.findAll().stream()
+                                .map(deliveryMapper::toResponse)
+                                .collect(Collectors.toList());
         }
 
-        Delivery savedDelivery = deliveryRepository.save(delivery);
-        return deliveryMapper.toResponse(savedDelivery);
-    }
-
-    public List<DeliveryResponse> getAllDeliveries() {
-        return deliveryRepository.findAll().stream()
-                .map(deliveryMapper::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    public DeliveryResponse getDeliveryById(UUID id) {
-        Delivery delivery = deliveryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Delivery not found"));
-        return deliveryMapper.toResponse(delivery);
-    }
-
-    @Transactional
-    public DeliveryResponse updateDelivery(UUID id, DeliveryRequest request) {
-        Delivery delivery = deliveryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Delivery not found"));
-
-        if (!delivery.getReference().equals(request.getReference()) &&
-                deliveryRepository.existsByReference(request.getReference())) {
-            throw new ConflictException("Delivery with reference " + request.getReference() + " already exists.");
+        public DeliveryResponse getDeliveryById(UUID id) {
+                Delivery delivery = deliveryRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("Delivery not found"));
+                return deliveryMapper.toResponse(delivery);
         }
 
-        Trip trip = tripRepository.findById(request.getTripId())
-                .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
+        @Transactional
+        public DeliveryResponse updateDelivery(UUID id, DeliveryRequest request) {
+                Delivery delivery = deliveryRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("Delivery not found"));
 
-        delivery.setReference(request.getReference());
-        delivery.setWeight(request.getWeight());
-        delivery.setVolume(request.getVolume());
-        delivery.setPickupAddress(request.getPickupAddress());
-        delivery.setDeliveryAddress(request.getDeliveryAddress());
-        delivery.setStatus(request.getStatus());
-        delivery.setTrip(trip);
+                if (!delivery.getReference().equals(request.getReference()) &&
+                                deliveryRepository.existsByReference(request.getReference())) {
+                        throw new ConflictException(
+                                        "Delivery with reference " + request.getReference() + " already exists.");
+                }
 
-        if (request.getCategoryId() != null) {
-            DeliveryCategory category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Delivery Category not found"));
-            delivery.setCategory(category);
-        } else {
-            delivery.setCategory(null);
+                Trip trip = tripRepository.findById(request.getTripId())
+                                .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
+
+                validateTripCapacity(trip, request.getWeight(), request.getVolume(), id);
+
+                delivery.setReference(request.getReference());
+                delivery.setWeight(request.getWeight());
+                delivery.setVolume(request.getVolume());
+                delivery.setPrix(request.getPrix());
+                delivery.setPickupAddress(request.getPickupAddress());
+                delivery.setPickupLatitude(request.getPickupLatitude());
+                delivery.setPickupLongitude(request.getPickupLongitude());
+                delivery.setDeliveryAddress(request.getDeliveryAddress());
+                delivery.setDeliveryLatitude(request.getDeliveryLatitude());
+                delivery.setDeliveryLongitude(request.getDeliveryLongitude());
+                delivery.setStatus(request.getStatus());
+                delivery.setTrip(trip);
+
+                if (request.getCategoryId() != null) {
+                        DeliveryCategory category = categoryRepository.findById(request.getCategoryId())
+                                        .orElseThrow(() -> new ResourceNotFoundException(
+                                                        "Delivery Category not found"));
+                        delivery.setCategory(category);
+                } else {
+                        delivery.setCategory(null);
+                }
+
+                Delivery updatedDelivery = deliveryRepository.save(delivery);
+                return deliveryMapper.toResponse(updatedDelivery);
         }
 
-        Delivery updatedDelivery = deliveryRepository.save(delivery);
-        return deliveryMapper.toResponse(updatedDelivery);
-    }
+        @Transactional
+        public void deleteDelivery(UUID id) {
+                Delivery delivery = deliveryRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException("Delivery not found"));
+                deliveryRepository.delete(delivery);
+        }
 
-    @Transactional
-    public void deleteDelivery(UUID id) {
-        Delivery delivery = deliveryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Delivery not found"));
-        deliveryRepository.delete(delivery);
-    }
+        private void validateTripCapacity(Trip trip, BigDecimal newWeight, BigDecimal newVolume,
+                        UUID excludingDeliveryId) {
+                BigDecimal totalWeight = trip.getDeliveries().stream()
+                                .filter(d -> excludingDeliveryId == null || !d.getId().equals(excludingDeliveryId))
+                                .map(d -> d.getWeight() != null ? d.getWeight() : BigDecimal.ZERO)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                                .add(newWeight != null ? newWeight : BigDecimal.ZERO);
+
+                BigDecimal totalVolume = trip.getDeliveries().stream()
+                                .filter(d -> excludingDeliveryId == null || !d.getId().equals(excludingDeliveryId))
+                                .map(d -> d.getVolume() != null ? d.getVolume() : BigDecimal.ZERO)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                                .add(newVolume != null ? newVolume : BigDecimal.ZERO);
+
+                BigDecimal maxWeight = trip.getTripTrailers().stream()
+                                .map(tt -> tt.getTrailer().getMaxWeight() != null ? tt.getTrailer().getMaxWeight()
+                                                : BigDecimal.ZERO)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                BigDecimal maxVolume = trip.getTripTrailers().stream()
+                                .map(tt -> tt.getTrailer().getMaxVolume() != null ? tt.getTrailer().getMaxVolume()
+                                                : BigDecimal.ZERO)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                if (totalWeight.compareTo(maxWeight) > 0) {
+                        throw new ConflictException(
+                                        "Total weight exceeds the maximum capacity of the assigned trailers ("
+                                                        + maxWeight + ").");
+                }
+                if (totalVolume.compareTo(maxVolume) > 0) {
+                        throw new ConflictException(
+                                        "Total volume exceeds the maximum capacity of the assigned trailers ("
+                                                        + maxVolume + ").");
+                }
+        }
 }

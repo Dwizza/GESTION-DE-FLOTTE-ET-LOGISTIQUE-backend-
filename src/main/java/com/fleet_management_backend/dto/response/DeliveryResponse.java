@@ -19,8 +19,13 @@ public class DeliveryResponse {
     private String reference;
     private BigDecimal weight;
     private BigDecimal volume;
+    private BigDecimal prix;
     private String pickupAddress;
     private String deliveryAddress;
+    private Double pickupLatitude;
+    private Double pickupLongitude;
+    private Double deliveryLatitude;
+    private Double deliveryLongitude;
     private DeliveryStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

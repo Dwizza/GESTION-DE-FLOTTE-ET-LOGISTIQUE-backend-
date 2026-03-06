@@ -26,10 +26,25 @@ public class Delivery {
     private BigDecimal volume;
 
     @Column(nullable = false)
+    private BigDecimal prix;
+
+    @Column(nullable = false)
     private String pickupAddress;
+
+    @Column(name = "pickup_latitude")
+    private Double pickupLatitude;
+
+    @Column(name = "pickup_longitude")
+    private Double pickupLongitude;
 
     @Column(nullable = false)
     private String deliveryAddress;
+
+    @Column(name = "delivery_latitude")
+    private Double deliveryLatitude;
+
+    @Column(name = "delivery_longitude")
+    private Double deliveryLongitude;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

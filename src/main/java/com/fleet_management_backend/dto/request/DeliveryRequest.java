@@ -29,11 +29,20 @@ public class DeliveryRequest {
     @DecimalMin(value = "0.0", inclusive = false, message = "Volume must be greater than zero")
     private BigDecimal volume;
 
+    @NotNull(message = "Price is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Price cannot be negative")
+    private BigDecimal prix;
+
     @NotBlank(message = "Pickup address is required")
     private String pickupAddress;
 
     @NotBlank(message = "Delivery address is required")
     private String deliveryAddress;
+
+    private Double pickupLatitude;
+    private Double pickupLongitude;
+    private Double deliveryLatitude;
+    private Double deliveryLongitude;
 
     @NotNull(message = "Status is required")
     private DeliveryStatus status;
