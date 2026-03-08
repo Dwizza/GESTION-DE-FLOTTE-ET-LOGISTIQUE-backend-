@@ -36,6 +36,12 @@ public class Maintenance {
     @Column(nullable = false)
     private MaintenanceStatus status;
 
+    private String reference;
+
+    private String description;
+
+    private String performedBy;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "truck_id")
     private Truck truck;
