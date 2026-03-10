@@ -9,10 +9,7 @@ import lombok.Data;
 public class RegisterClientRequest {
 
     @NotBlank
-    private String firstName;
-
-    @NotBlank
-    private String lastName;
+    private String companyName;
 
     @Email
     @NotBlank
@@ -28,6 +25,4 @@ public class RegisterClientRequest {
     private String address;
 
     private String phone;
-
-    private String companyName;
 }

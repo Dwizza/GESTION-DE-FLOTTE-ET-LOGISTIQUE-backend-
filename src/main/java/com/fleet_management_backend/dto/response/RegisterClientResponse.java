@@ -9,8 +9,6 @@ import java.util.UUID;
 public class RegisterClientResponse {
 
     private UUID userId;
-    private String firstName;
-    private String lastName;
     private String email;
     private Role role;
     private Boolean active;
