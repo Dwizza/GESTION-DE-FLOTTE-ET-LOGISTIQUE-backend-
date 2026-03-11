@@ -20,12 +20,19 @@ public class CarburantTransaction {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(nullable = false, unique = true)
+    private String reference;
+
     @Column(nullable = false)
     private LocalDateTime dateHeure;
 
     private BigDecimal quantite;
 
     private BigDecimal cout;
+
+    private String stationName;
+
+    private String receiptNumber;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "truck_id", nullable = false)
