@@ -31,6 +31,10 @@ public class TrackingPoint {
     @JoinColumn(name = "truck_id", nullable = false)
     private Truck truck;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "trip_id")
+    private Trip trip;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
