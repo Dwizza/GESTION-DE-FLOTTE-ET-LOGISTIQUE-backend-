@@ -1,6 +1,7 @@
 package com.fleet_management_backend.service;
 
 import com.fleet_management_backend.dto.request.TrackingRequest;
+import com.fleet_management_backend.dto.response.TrackingResponse;
 import com.fleet_management_backend.entity.TrackingPoint;
 import com.fleet_management_backend.entity.Trip;
 import com.fleet_management_backend.entity.Truck;

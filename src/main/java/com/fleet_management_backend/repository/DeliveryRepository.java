@@ -9,4 +9,5 @@ import java.util.UUID;
 @Repository
 public interface DeliveryRepository extends JpaRepository<Delivery, UUID> {
     boolean existsByReference(String reference);
+    java.util.List<Delivery> findByTripId(UUID tripId);
 }

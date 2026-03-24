@@ -6,6 +6,7 @@ import com.fleet_management_backend.entity.*;
 import com.fleet_management_backend.entity.enums.TripStatus;
 import com.fleet_management_backend.entity.enums.TruckStatus;
 import com.fleet_management_backend.entity.enums.TrailerStatus;
+import com.fleet_management_backend.entity.enums.DeliveryStatus;
 import com.fleet_management_backend.exception.ConflictException;
 import com.fleet_management_backend.exception.ResourceNotFoundException;
 import com.fleet_management_backend.mapper.TripMapper;
@@ -28,6 +29,7 @@ public class TripService {
     private final ClientRepository clientRepository;
     private final TruckRepository truckRepository;
     private final TrailerRepository trailerRepository;
+    private final DeliveryRepository deliveryRepository;
     private final TripMapper tripMapper;
 
     @Transactional
@@ -170,6 +172,20 @@ public class TripService {
         trip.setStartDate(request.getStartDate());
         trip.setEndDate(request.getEndDate());
         trip.setStatus(request.getStatus());
+
+        if (request.getStatus() == TripStatus.COMPLETED) {
+            java.util.List<Delivery> deliveries = deliveryRepository.findByTripId(trip.getId());
+            if (deliveries != null && !deliveries.isEmpty()) {
+                deliveries.forEach(d -> d.setStatus(DeliveryStatus.DELIVERED));
+                deliveryRepository.saveAll(deliveries);
+            }
+        } else if (request.getStatus() == TripStatus.ONGOING) {
+            java.util.List<Delivery> deliveries = deliveryRepository.findByTripId(trip.getId());
+            if (deliveries != null && !deliveries.isEmpty()) {
+                deliveries.forEach(d -> d.setStatus(DeliveryStatus.IN_PROGRESS));
+                deliveryRepository.saveAll(deliveries);
+            }
+        }
         trip.setClient(client);
         trip.setDriver(newDriver);
 
@@ -285,6 +301,13 @@ public class TripService {
         }
 
         trip.setStatus(TripStatus.ONGOING);
+
+        java.util.List<Delivery> deliveries = deliveryRepository.findByTripId(trip.getId());
+        if (deliveries != null && !deliveries.isEmpty()) {
+            deliveries.forEach(d -> d.setStatus(DeliveryStatus.IN_PROGRESS));
+            deliveryRepository.saveAll(deliveries);
+        }
+
         Trip savedTrip = tripRepository.save(trip);
         return tripMapper.toResponse(savedTrip);
     }
@@ -344,6 +367,12 @@ public class TripService {
 
         trip.setStatus(TripStatus.COMPLETED);
         trip.setEndDate(java.time.LocalDate.now());
+
+        java.util.List<Delivery> deliveries = deliveryRepository.findByTripId(trip.getId());
+        if (deliveries != null && !deliveries.isEmpty()) {
+            deliveries.forEach(d -> d.setStatus(DeliveryStatus.DELIVERED));
+            deliveryRepository.saveAll(deliveries);
+        }
 
         // Release resources
         Driver driver = trip.getDriver();
