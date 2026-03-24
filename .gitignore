@@ -32,8 +32,3 @@ build/
 ### VS Code ###
 .vscode/
 
-
-/pdf_text.txt
-/cahier_de_charge(fleet_management).pdf
-/remaining_steps.txt
-/extract_pdf.py
