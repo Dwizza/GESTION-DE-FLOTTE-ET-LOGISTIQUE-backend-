@@ -18,7 +18,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class TripRequest {
 
-    @NotBlank(message = "Reference is required")
     private String reference;
 
     @NotNull(message = "Start date is required")

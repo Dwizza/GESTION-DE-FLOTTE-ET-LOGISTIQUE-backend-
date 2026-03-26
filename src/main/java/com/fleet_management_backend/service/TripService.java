@@ -1,24 +1,26 @@
 package com.fleet_management_backend.service;
 
 import com.fleet_management_backend.dto.request.TripRequest;
+import com.fleet_management_backend.dto.response.PaginatedResponse;
 import com.fleet_management_backend.dto.response.TripResponse;
 import com.fleet_management_backend.entity.*;
+import com.fleet_management_backend.entity.enums.DeliveryStatus;
+import com.fleet_management_backend.entity.enums.TrailerStatus;
 import com.fleet_management_backend.entity.enums.TripStatus;
 import com.fleet_management_backend.entity.enums.TruckStatus;
-import com.fleet_management_backend.entity.enums.TrailerStatus;
-import com.fleet_management_backend.entity.enums.DeliveryStatus;
 import com.fleet_management_backend.exception.ConflictException;
 import com.fleet_management_backend.exception.ResourceNotFoundException;
 import com.fleet_management_backend.mapper.TripMapper;
 import com.fleet_management_backend.repository.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import com.fleet_management_backend.dto.response.PaginatedResponse;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -37,7 +39,11 @@ public class TripService {
 
     @Transactional
     public TripResponse createTrip(TripRequest request, UUID createdByUserId) {
-        if (tripRepository.existsByReference(request.getReference())) {
+        if (request.getReference() == null || request.getReference().trim().isEmpty()) {
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+            String random = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+            request.setReference("TRP-" + timestamp + "-" + random);
+        } else if (tripRepository.existsByReference(request.getReference())) {
             throw new ConflictException("Trip with reference " + request.getReference() + " already exists.");
         }
 
@@ -380,7 +386,7 @@ public class TripService {
     }
 
     @Transactional
-    public TripResponse completeTrip(UUID tripId, UUID driverId) {
+    public TripResponse completeTrip(UUID tripId, UUID driverId, BigDecimal distance) {
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
 
@@ -394,6 +400,9 @@ public class TripService {
 
         trip.setStatus(TripStatus.COMPLETED);
         trip.setEndDate(java.time.LocalDate.now());
+        if (distance != null) {
+            trip.setTotalDistance(distance);
+        }
 
         java.util.List<Delivery> deliveries = deliveryRepository.findByTripId(trip.getId());
         if (deliveries != null && !deliveries.isEmpty()) {
@@ -410,6 +419,13 @@ public class TripService {
             Truck truck = tt.getTruck();
             if (truck.getStatus() == TruckStatus.IN_TRIP) {
                 truck.setStatus(TruckStatus.AVAILABLE);
+
+                // Update mileage
+                if (distance != null) {
+                    BigDecimal m = truck.getTotalMileage() != null ? truck.getTotalMileage() : BigDecimal.ZERO;
+                    truck.setTotalMileage(m.add(distance));
+                }
+
                 truckRepository.save(truck);
             }
         }

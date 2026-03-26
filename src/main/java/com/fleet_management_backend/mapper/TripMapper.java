@@ -36,6 +36,7 @@ public interface TripMapper {
     @Mapping(target = "client.companyName", source = "client.companyName")
     @Mapping(target = "trucks", source = "tripTrucks", qualifiedByName = "mapTrucks")
     @Mapping(target = "trailers", source = "tripTrailers", qualifiedByName = "mapTrailers")
+    @Mapping(target = "deliveries", source = "deliveries", qualifiedByName = "mapDeliveries")
     TripResponse toResponse(Trip trip);
 
     @Named("mapTrucks")
@@ -60,6 +61,25 @@ public interface TripMapper {
                 .map(tt -> TripResponse.SimpleTrailerResponse.builder()
                         .id(tt.getTrailer().getId())
                         .type(tt.getTrailer().getType().name())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Named("mapDeliveries")
+    default List<TripResponse.SimpleDeliveryResponse> mapDeliveries(List<com.fleet_management_backend.entity.Delivery> deliveries) {
+        if (deliveries == null)
+            return Collections.emptyList();
+        return deliveries.stream()
+                .map(d -> TripResponse.SimpleDeliveryResponse.builder()
+                        .id(d.getId())
+                        .pickupAddress(d.getPickupAddress())
+                        .pickupLatitude(d.getPickupLatitude())
+                        .pickupLongitude(d.getPickupLongitude())
+                        .deliveryAddress(d.getDeliveryAddress())
+                        .deliveryLatitude(d.getDeliveryLatitude())
+                        .deliveryLongitude(d.getDeliveryLongitude())
+                        .weight(d.getWeight())
+                        .volume(d.getVolume())
                         .build())
                 .collect(Collectors.toList());
     }

@@ -34,6 +34,7 @@ public class TripResponse {
     // Attached Resources
     private List<SimpleTruckResponse> trucks;
     private List<SimpleTrailerResponse> trailers;
+    private List<SimpleDeliveryResponse> deliveries;
 
     // Inner DTOs to avoid circular dependencies and huge responses
     @Data
@@ -73,6 +74,22 @@ public class TripResponse {
     @AllArgsConstructor
     public static class SimpleTrailerResponse {
         private UUID id;
-        private String type; // Using String to avoid tight coupling if enum changes
+        private String type;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SimpleDeliveryResponse {
+        private UUID id;
+        private String pickupAddress;
+        private Double pickupLatitude;
+        private Double pickupLongitude;
+        private String deliveryAddress;
+        private Double deliveryLatitude;
+        private Double deliveryLongitude;
+        private BigDecimal weight;
+        private BigDecimal volume;
     }
 }
