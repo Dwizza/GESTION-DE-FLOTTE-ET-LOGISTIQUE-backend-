@@ -19,6 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.fleet_management_backend.dto.response.PaginatedResponse;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,6 +36,12 @@ public class MaintenanceService {
 
     @Transactional
     public MaintenanceResponse createMaintenance(MaintenanceRequest request) {
+        if (request.getReference() == null || request.getReference().trim().isEmpty()) {
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+            String random = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+            request.setReference("MNT-" + timestamp + "-" + random);
+        }
+
         Maintenance maintenance = maintenanceMapper.toEntity(request);
 
         if (request.getTruckId() != null) {

@@ -96,9 +96,7 @@ public class TrackingService {
     }
 
     public List<TrackingResponse> getLivePositions() {
-        // For live tracking, we might want the latest point for each active truck/trip
-        // Basic implementation: last hour's points
-        return trackingPointRepository.findAll().stream() // Simple example, should be optimized
+        return trackingPointRepository.findAll().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
