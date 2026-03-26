@@ -13,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.fleet_management_backend.dto.response.PaginatedResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -56,6 +59,18 @@ public class TrailerService {
     public void deleteTrailer(UUID id) {
         Trailer trailer = findTrailerById(id);
         trailerRepository.delete(trailer);
+    }
+
+    public PaginatedResponse<TrailerResponse> getPaginatedTrailers(Pageable pageable) {
+        Page<Trailer> trailersPage = trailerRepository.findAll(pageable);
+        return PaginatedResponse.<TrailerResponse>builder()
+                .content(trailersPage.getContent().stream().map(trailerMapper::toResponse).toList())
+                .pageNumber(trailersPage.getNumber())
+                .pageSize(trailersPage.getSize())
+                .totalElements(trailersPage.getTotalElements())
+                .totalPages(trailersPage.getTotalPages())
+                .last(trailersPage.isLast())
+                .build();
     }
 
     private Trailer findTrailerById(UUID id) {

@@ -14,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.fleet_management_backend.dto.response.PaginatedResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +68,18 @@ public class TruckService {
     public void deleteTruck(UUID id) {
         Truck truck = findTruckById(id);
         truckRepository.delete(truck);
+    }
+
+    public PaginatedResponse<TruckResponse> getPaginatedTrucks(Pageable pageable) {
+        Page<Truck> trucksPage = truckRepository.findAll(pageable);
+        return PaginatedResponse.<TruckResponse>builder()
+                .content(trucksPage.getContent().stream().map(truckMapper::toResponse).toList())
+                .pageNumber(trucksPage.getNumber())
+                .pageSize(trucksPage.getSize())
+                .totalElements(trucksPage.getTotalElements())
+                .totalPages(trucksPage.getTotalPages())
+                .last(trucksPage.isLast())
+                .build();
     }
 
     private Truck findTruckById(UUID id) {

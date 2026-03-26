@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByEmail(String email);
     Optional<User> findByEmail(String email);
+    org.springframework.data.domain.Page<User> findByRole(com.fleet_management_backend.entity.enums.Role role, org.springframework.data.domain.Pageable pageable);
 }

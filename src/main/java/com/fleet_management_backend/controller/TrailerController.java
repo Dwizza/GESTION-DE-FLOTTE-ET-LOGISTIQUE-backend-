@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.fleet_management_backend.dto.response.PaginatedResponse;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 import java.util.List;
 import java.util.UUID;
@@ -27,6 +30,11 @@ public class TrailerController {
     @GetMapping
     public ResponseEntity<List<TrailerResponse>> getAllTrailers() {
         return ResponseEntity.ok(trailerService.getAllTrailers());
+    }
+
+    @GetMapping("/page")
+    public ResponseEntity<PaginatedResponse<TrailerResponse>> getPaginatedTrailers(@PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(trailerService.getPaginatedTrailers(pageable));
     }
 
     @GetMapping("/{id}")

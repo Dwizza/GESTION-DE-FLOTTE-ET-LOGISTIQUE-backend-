@@ -22,6 +22,10 @@ import com.fleet_management_backend.dto.response.ClientResponse;
 import com.fleet_management_backend.entity.Client;
 import com.fleet_management_backend.mapper.ClientMapper;
 import com.fleet_management_backend.repository.ClientRepository;
+import com.fleet_management_backend.dto.response.PaginatedResponse;
+import com.fleet_management_backend.dto.response.ManagerResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @AllArgsConstructor
@@ -157,4 +161,36 @@ public class AdminService {
         userRepository.delete(user);
     }
 
+    public PaginatedResponse<ManagerResponse> getPaginatedManagers(Pageable pageable) {
+        Page<User> managersPage = userRepository.findByRole(Role.LOGISTICS_MANAGER, pageable);
+        return PaginatedResponse.<ManagerResponse>builder()
+                .content(managersPage.getContent().stream().map(userMapper::toManagerResponse).toList())
+                .pageNumber(managersPage.getNumber())
+                .pageSize(managersPage.getSize())
+                .totalElements(managersPage.getTotalElements())
+                .totalPages(managersPage.getTotalPages())
+                .last(managersPage.isLast())
+                .build();
+    }
+
+    public PaginatedResponse<ClientResponse> getPaginatedClients(Pageable pageable) {
+        Page<Client> clientsPage = clientRepository.findAll(pageable);
+        return PaginatedResponse.<ClientResponse>builder()
+                .content(clientsPage.getContent().stream()
+                        .map(c -> ClientResponse.builder()
+                                .id(c.getId())
+                                .companyName(c.getCompanyName())
+                                .address(c.getAddress())
+                                .phone(c.getPhone())
+                                .email(c.getUser().getEmail())
+                                .role(c.getUser().getRole().name())
+                                .build())
+                        .toList())
+                .pageNumber(clientsPage.getNumber())
+                .pageSize(clientsPage.getSize())
+                .totalElements(clientsPage.getTotalElements())
+                .totalPages(clientsPage.getTotalPages())
+                .last(clientsPage.isLast())
+                .build();
+    }
 }

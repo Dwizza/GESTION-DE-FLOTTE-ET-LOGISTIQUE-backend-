@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.fleet_management_backend.dto.response.PaginatedResponse;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 import java.util.List;
 import java.util.UUID;
@@ -27,6 +30,11 @@ public class TruckController {
     @GetMapping
     public ResponseEntity<List<TruckResponse>> getAllTrucks() {
         return ResponseEntity.ok(truckService.getAllTrucks());
+    }
+
+    @GetMapping("/page")
+    public ResponseEntity<PaginatedResponse<TruckResponse>> getPaginatedTrucks(@PageableDefault(size = 9) Pageable pageable) {
+        return ResponseEntity.ok(truckService.getPaginatedTrucks(pageable));
     }
 
     @GetMapping("/{id}")

@@ -16,6 +16,11 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import com.fleet_management_backend.dto.response.PaginatedResponse;
+import com.fleet_management_backend.dto.response.ManagerResponse;
+import com.fleet_management_backend.dto.response.DriverResponse;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 import java.util.UUID;
 
@@ -58,6 +63,11 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getAllManagers());
     }
 
+    @GetMapping("/managers/page")
+    public ResponseEntity<PaginatedResponse<ManagerResponse>> getPaginatedManagers(@PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(adminService.getPaginatedManagers(pageable));
+    }
+
     @GetMapping("/manager/{id}")
     public ResponseEntity<com.fleet_management_backend.dto.response.ManagerResponse> getManagerById(
             @PathVariable UUID id) {
@@ -74,6 +84,11 @@ public class AdminController {
     @GetMapping("/drivers")
     public ResponseEntity<java.util.List<com.fleet_management_backend.dto.response.DriverResponse>> getAllDrivers() {
         return ResponseEntity.ok(driverService.getAllDrivers());
+    }
+
+    @GetMapping("/drivers/page")
+    public ResponseEntity<PaginatedResponse<DriverResponse>> getPaginatedDrivers(@PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(driverService.getPaginatedDrivers(pageable));
     }
 
     @GetMapping("/driver/{id}")
@@ -94,6 +109,13 @@ public class AdminController {
         return ResponseEntity.ok(tripService.getTripsByDriverId(id));
     }
 
+    @GetMapping("/driver/{id}/trips/page")
+    public ResponseEntity<PaginatedResponse<com.fleet_management_backend.dto.response.TripResponse>> getPaginatedDriverTrips(
+            @PathVariable UUID id,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(tripService.getPaginatedTripsByDriverId(id, pageable));
+    }
+
     @GetMapping("/clients")
     @Transactional(readOnly = true)
     public ResponseEntity<java.util.List<ClientResponse>> getAllClients() {
@@ -108,6 +130,11 @@ public class AdminController {
                         .build())
                 .toList();
         return ResponseEntity.ok(clients);
+    }
+
+    @GetMapping("/clients/page")
+    public ResponseEntity<PaginatedResponse<ClientResponse>> getPaginatedClients(@PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(adminService.getPaginatedClients(pageable));
     }
 
     @PostMapping("/create/client")
