@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import com.fleet_management_backend.dto.response.PaginatedResponse;
 import com.fleet_management_backend.entity.CarburantTransaction;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -30,6 +32,12 @@ public class CarburantService {
 
     @Transactional
     public CarburantTransactionResponse createTransaction(CarburantTransactionRequest request) {
+        if (request.getReference() == null || request.getReference().trim().isEmpty()) {
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+            String random = UUID.randomUUID().toString().substring(0, 4).toUpperCase();
+            request.setReference("FL-" + timestamp + "-" + random);
+        }
+
         Truck truck = truckRepository.findById(request.getTruckId())
                 .orElseThrow(() -> new ResourceNotFoundException("Truck not found"));
 

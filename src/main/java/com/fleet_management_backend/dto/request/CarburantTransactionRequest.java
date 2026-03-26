@@ -10,7 +10,6 @@ import java.util.UUID;
 @Data
 public class CarburantTransactionRequest {
 
-    @NotNull(message = "Reference is required")
     private String reference;
 
     @NotNull(message = "Datetime is required")
