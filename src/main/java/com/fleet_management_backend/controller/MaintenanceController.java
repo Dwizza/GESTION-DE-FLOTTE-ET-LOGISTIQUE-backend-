@@ -9,6 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.fleet_management_backend.dto.response.PaginatedResponse;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 import java.util.List;
 import java.util.UUID;
@@ -30,6 +33,12 @@ public class MaintenanceController {
     @PreAuthorize("hasAnyRole('ADMIN', 'LOGISTICS_MANAGER')")
     public ResponseEntity<List<MaintenanceResponse>> getAll() {
         return ResponseEntity.ok(maintenanceService.getAllMaintenances());
+    }
+
+    @GetMapping("/page")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LOGISTICS_MANAGER')")
+    public ResponseEntity<PaginatedResponse<MaintenanceResponse>> getPaginated(@PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(maintenanceService.getPaginatedMaintenances(pageable));
     }
 
     @GetMapping("/{id}")

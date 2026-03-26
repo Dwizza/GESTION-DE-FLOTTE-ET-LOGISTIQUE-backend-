@@ -14,6 +14,9 @@ import com.fleet_management_backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.fleet_management_backend.dto.response.PaginatedResponse;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -120,6 +123,30 @@ public class TripService {
         return tripRepository.findByDriverIdOrderByStartDateDesc(driverId).stream()
                 .map(tripMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    public PaginatedResponse<TripResponse> getPaginatedTrips(Pageable pageable) {
+        Page<Trip> tripsPage = tripRepository.findAll(pageable);
+        return PaginatedResponse.<TripResponse>builder()
+                .content(tripsPage.getContent().stream().map(tripMapper::toResponse).toList())
+                .pageNumber(tripsPage.getNumber())
+                .pageSize(tripsPage.getSize())
+                .totalElements(tripsPage.getTotalElements())
+                .totalPages(tripsPage.getTotalPages())
+                .last(tripsPage.isLast())
+                .build();
+    }
+
+    public PaginatedResponse<TripResponse> getPaginatedTripsByDriverId(UUID driverId, Pageable pageable) {
+        Page<Trip> tripsPage = tripRepository.findByDriverId(driverId, pageable);
+        return PaginatedResponse.<TripResponse>builder()
+                .content(tripsPage.getContent().stream().map(tripMapper::toResponse).toList())
+                .pageNumber(tripsPage.getNumber())
+                .pageSize(tripsPage.getSize())
+                .totalElements(tripsPage.getTotalElements())
+                .totalPages(tripsPage.getTotalPages())
+                .last(tripsPage.isLast())
+                .build();
     }
 
     @Transactional

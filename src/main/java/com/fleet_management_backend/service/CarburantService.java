@@ -11,6 +11,10 @@ import com.fleet_management_backend.repository.TruckRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.fleet_management_backend.dto.response.PaginatedResponse;
+import com.fleet_management_backend.entity.CarburantTransaction;
 
 import java.util.List;
 import java.util.UUID;
@@ -40,6 +44,18 @@ public class CarburantService {
         return carburantRepository.findAll().stream()
                 .map(carburantMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    public PaginatedResponse<CarburantTransactionResponse> getPaginatedTransactions(Pageable pageable) {
+        Page<CarburantTransaction> transactionsPage = carburantRepository.findAll(pageable);
+        return PaginatedResponse.<CarburantTransactionResponse>builder()
+                .content(transactionsPage.getContent().stream().map(carburantMapper::toResponse).toList())
+                .pageNumber(transactionsPage.getNumber())
+                .pageSize(transactionsPage.getSize())
+                .totalElements(transactionsPage.getTotalElements())
+                .totalPages(transactionsPage.getTotalPages())
+                .last(transactionsPage.isLast())
+                .build();
     }
 
     public CarburantTransactionResponse getTransactionById(UUID id) {

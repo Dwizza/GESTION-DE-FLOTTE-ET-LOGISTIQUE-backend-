@@ -15,6 +15,9 @@ import com.fleet_management_backend.repository.TruckRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.fleet_management_backend.dto.response.PaginatedResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -85,6 +88,18 @@ public class MaintenanceService {
         return maintenanceRepository.findAll().stream()
                 .map(maintenanceMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    public PaginatedResponse<MaintenanceResponse> getPaginatedMaintenances(Pageable pageable) {
+        Page<Maintenance> maintenancePage = maintenanceRepository.findAll(pageable);
+        return PaginatedResponse.<MaintenanceResponse>builder()
+                .content(maintenancePage.getContent().stream().map(maintenanceMapper::toResponse).toList())
+                .pageNumber(maintenancePage.getNumber())
+                .pageSize(maintenancePage.getSize())
+                .totalElements(maintenancePage.getTotalElements())
+                .totalPages(maintenancePage.getTotalPages())
+                .last(maintenancePage.isLast())
+                .build();
     }
 
     @Transactional

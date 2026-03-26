@@ -14,6 +14,9 @@ import com.fleet_management_backend.repository.TripRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.fleet_management_backend.dto.response.PaginatedResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -59,6 +62,18 @@ public class DeliveryService {
                 return deliveryRepository.findAll().stream()
                                 .map(deliveryMapper::toResponse)
                                 .collect(Collectors.toList());
+        }
+
+        public PaginatedResponse<DeliveryResponse> getPaginatedDeliveries(Pageable pageable) {
+                Page<Delivery> deliveriesPage = deliveryRepository.findAll(pageable);
+                return PaginatedResponse.<DeliveryResponse>builder()
+                                .content(deliveriesPage.getContent().stream().map(deliveryMapper::toResponse).toList())
+                                .pageNumber(deliveriesPage.getNumber())
+                                .pageSize(deliveriesPage.getSize())
+                                .totalElements(deliveriesPage.getTotalElements())
+                                .totalPages(deliveriesPage.getTotalPages())
+                                .last(deliveriesPage.isLast())
+                                .build();
         }
 
         public DeliveryResponse getDeliveryById(UUID id) {

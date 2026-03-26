@@ -9,6 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.fleet_management_backend.dto.response.PaginatedResponse;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +34,12 @@ public class CarburantController {
     @PreAuthorize("hasAnyRole('ADMIN', 'LOGISTICS_MANAGER')")
     public ResponseEntity<List<CarburantTransactionResponse>> getAll() {
         return ResponseEntity.ok(carburantService.getAllTransactions());
+    }
+
+    @GetMapping("/page")
+    @PreAuthorize("hasAnyRole('ADMIN', 'LOGISTICS_MANAGER')")
+    public ResponseEntity<PaginatedResponse<CarburantTransactionResponse>> getPaginated(@PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(carburantService.getPaginatedTransactions(pageable));
     }
 
     @GetMapping("/{id}")

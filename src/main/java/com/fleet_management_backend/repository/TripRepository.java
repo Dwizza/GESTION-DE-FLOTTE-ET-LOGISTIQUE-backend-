@@ -19,4 +19,6 @@ public interface TripRepository extends JpaRepository<Trip, UUID> {
     List<Trip> findTripsByTruckIdAndStatus(@Param("truckId") UUID truckId, @Param("status") TripStatus status);
 
     List<Trip> findByDriverIdOrderByStartDateDesc(UUID driverId);
+
+    org.springframework.data.domain.Page<Trip> findByDriverId(UUID driverId, org.springframework.data.domain.Pageable pageable);
 }

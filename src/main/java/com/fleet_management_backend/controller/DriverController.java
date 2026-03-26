@@ -10,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.fleet_management_backend.dto.response.PaginatedResponse;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 import java.util.List;
 import java.util.UUID;
@@ -27,6 +30,14 @@ public class DriverController {
     public ResponseEntity<List<TripResponse>> getDriverTrips(Authentication authentication) {
         Driver driver = getAuthenticatedDriver(authentication);
         return ResponseEntity.ok(tripService.getTripsByDriverId(driver.getId()));
+    }
+
+    @GetMapping("/trips/page")
+    public ResponseEntity<PaginatedResponse<TripResponse>> getPaginatedDriverTrips(
+            Authentication authentication,
+            @PageableDefault(size = 9) Pageable pageable) {
+        Driver driver = getAuthenticatedDriver(authentication);
+        return ResponseEntity.ok(tripService.getPaginatedTripsByDriverId(driver.getId(), pageable));
     }
 
     @PostMapping("/trips/{id}/accept")

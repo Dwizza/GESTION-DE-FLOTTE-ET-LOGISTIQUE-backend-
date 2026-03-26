@@ -16,6 +16,9 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.fleet_management_backend.dto.response.PaginatedResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -100,5 +103,17 @@ public class DriverService {
         driver = driverRepository.save(driver);
 
         return driverMapper.toDriverResponse(driver);
+    }
+
+    public PaginatedResponse<DriverResponse> getPaginatedDrivers(Pageable pageable) {
+        Page<Driver> driversPage = driverRepository.findAll(pageable);
+        return PaginatedResponse.<DriverResponse>builder()
+                .content(driversPage.getContent().stream().map(driverMapper::toDriverResponse).toList())
+                .pageNumber(driversPage.getNumber())
+                .pageSize(driversPage.getSize())
+                .totalElements(driversPage.getTotalElements())
+                .totalPages(driversPage.getTotalPages())
+                .last(driversPage.isLast())
+                .build();
     }
 }
