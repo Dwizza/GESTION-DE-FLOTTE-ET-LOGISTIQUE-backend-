@@ -13,6 +13,7 @@ import com.fleet_management_backend.exception.ResourceNotFoundException;
 import com.fleet_management_backend.mapper.TripMapper;
 import com.fleet_management_backend.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TripService {
 
     private final TripRepository tripRepository;
@@ -36,6 +38,7 @@ public class TripService {
     private final TrailerRepository trailerRepository;
     private final DeliveryRepository deliveryRepository;
     private final TripMapper tripMapper;
+    private final DistanceService distanceService;
 
     @Transactional
     public TripResponse createTrip(TripRequest request, UUID createdByUserId) {
@@ -206,11 +209,18 @@ public class TripService {
         trip.setEndDate(request.getEndDate());
         trip.setStatus(request.getStatus());
 
-        if (request.getStatus() == TripStatus.COMPLETED) {
+        if (request.getStatus() == TripStatus.COMPLETED && !wasFinished) {
             java.util.List<Delivery> deliveries = deliveryRepository.findByTripId(trip.getId());
             if (deliveries != null && !deliveries.isEmpty()) {
                 deliveries.forEach(d -> d.setStatus(DeliveryStatus.DELIVERED));
                 deliveryRepository.saveAll(deliveries);
+            }
+
+            // Auto-calculate total road distance from deliveries and update truck mileage
+            BigDecimal totalDistance = calculateTotalDeliveryDistance(trip.getId());
+            if (totalDistance.compareTo(BigDecimal.ZERO) > 0) {
+                trip.setTotalDistance(totalDistance);
+                log.info("Trip {} completed. Total delivery distance: {} km", trip.getReference(), totalDistance);
             }
         } else if (request.getStatus() == TripStatus.ONGOING) {
             java.util.List<Delivery> deliveries = deliveryRepository.findByTripId(trip.getId());
@@ -226,6 +236,16 @@ public class TripService {
             Truck oldTruck = tt.getTruck();
             if (oldTruck.getStatus() == TruckStatus.IN_TRIP) {
                 oldTruck.setStatus(TruckStatus.AVAILABLE);
+
+                // Update truck mileage when trip is completed
+                if (isNowFinished && !wasFinished && request.getStatus() == TripStatus.COMPLETED
+                        && trip.getTotalDistance() != null && trip.getTotalDistance().compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal currentMileage = oldTruck.getTotalMileage() != null ? oldTruck.getTotalMileage() : BigDecimal.ZERO;
+                    oldTruck.setTotalMileage(currentMileage.add(trip.getTotalDistance()));
+                    log.info("Truck {} mileage updated: {} -> {} km", oldTruck.getRegistrationNumber(),
+                            currentMileage, oldTruck.getTotalMileage());
+                }
+
                 truckRepository.save(oldTruck);
             }
         }
@@ -400,8 +420,15 @@ public class TripService {
 
         trip.setStatus(TripStatus.COMPLETED);
         trip.setEndDate(java.time.LocalDate.now());
-        if (distance != null) {
-            trip.setTotalDistance(distance);
+
+        // Auto-calculate road distance from deliveries if not provided
+        BigDecimal tripDistance = distance;
+        if (tripDistance == null || tripDistance.compareTo(BigDecimal.ZERO) == 0) {
+            tripDistance = calculateTotalDeliveryDistance(trip.getId());
+        }
+        if (tripDistance.compareTo(BigDecimal.ZERO) > 0) {
+            trip.setTotalDistance(tripDistance);
+            log.info("Trip {} completed by driver. Total distance: {} km", trip.getReference(), tripDistance);
         }
 
         java.util.List<Delivery> deliveries = deliveryRepository.findByTripId(trip.getId());
@@ -420,10 +447,12 @@ public class TripService {
             if (truck.getStatus() == TruckStatus.IN_TRIP) {
                 truck.setStatus(TruckStatus.AVAILABLE);
 
-                // Update mileage
-                if (distance != null) {
+                // Update mileage with trip distance
+                if (tripDistance.compareTo(BigDecimal.ZERO) > 0) {
                     BigDecimal m = truck.getTotalMileage() != null ? truck.getTotalMileage() : BigDecimal.ZERO;
-                    truck.setTotalMileage(m.add(distance));
+                    truck.setTotalMileage(m.add(tripDistance));
+                    log.info("Truck {} mileage updated: {} -> {} km",
+                            truck.getRegistrationNumber(), m, truck.getTotalMileage());
                 }
 
                 truckRepository.save(truck);
@@ -472,5 +501,36 @@ public class TripService {
                     "Assigned trailers do not have enough volume capacity for the existing deliveries. Total needed: "
                             + totalVolume + ", Available: " + maxVolume);
         }
+    }
+
+    /**
+     * Calculate the total road distance for all deliveries in a trip.
+     * Uses OSRM API for real road distance, falls back to Haversine.
+     */
+    private BigDecimal calculateTotalDeliveryDistance(java.util.UUID tripId) {
+        java.util.List<Delivery> deliveries = deliveryRepository.findByTripId(tripId);
+        BigDecimal totalDistance = BigDecimal.ZERO;
+
+        if (deliveries == null || deliveries.isEmpty()) {
+            return totalDistance;
+        }
+
+        for (Delivery delivery : deliveries) {
+            if (delivery.getPickupLatitude() != null && delivery.getPickupLongitude() != null
+                    && delivery.getDeliveryLatitude() != null && delivery.getDeliveryLongitude() != null) {
+                BigDecimal distance = distanceService.calculateRoadDistance(
+                        delivery.getPickupLatitude(), delivery.getPickupLongitude(),
+                        delivery.getDeliveryLatitude(), delivery.getDeliveryLongitude());
+                totalDistance = totalDistance.add(distance);
+                log.info("Delivery {} ({} -> {}): {} km",
+                        delivery.getReference(), delivery.getPickupAddress(),
+                        delivery.getDeliveryAddress(), distance);
+            } else {
+                log.warn("Delivery {} is missing GPS coordinates, skipping distance calculation",
+                        delivery.getReference());
+            }
+        }
+
+        return totalDistance;
     }
 }
