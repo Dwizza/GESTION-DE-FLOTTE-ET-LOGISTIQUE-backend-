@@ -53,9 +53,13 @@ public class DriverController {
     }
 
     @PostMapping("/trips/{id}/complete")
-    public ResponseEntity<TripResponse> completeTrip(@PathVariable UUID id, Authentication authentication) {
+    public ResponseEntity<TripResponse> completeTrip(
+            @PathVariable UUID id,
+            @RequestBody java.util.Map<String, java.math.BigDecimal> requestData,
+            Authentication authentication) {
         Driver driver = getAuthenticatedDriver(authentication);
-        return ResponseEntity.ok(tripService.completeTrip(id, driver.getId()));
+        java.math.BigDecimal distance = requestData.get("distance");
+        return ResponseEntity.ok(tripService.completeTrip(id, driver.getId(), distance));
     }
 
     private Driver getAuthenticatedDriver(Authentication authentication) {

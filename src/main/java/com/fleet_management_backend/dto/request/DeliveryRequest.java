@@ -18,7 +18,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class DeliveryRequest {
 
-    @NotBlank(message = "Reference is required")
     private String reference;
 
     @NotNull(message = "Weight is required")
