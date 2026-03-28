@@ -4,6 +4,8 @@ import com.fleet_management_backend.dto.request.TripRequest;
 import com.fleet_management_backend.dto.response.PaginatedResponse;
 import com.fleet_management_backend.dto.response.TripResponse;
 import com.fleet_management_backend.entity.*;
+import com.fleet_management_backend.entity.enums.MaintenanceStatus;
+import com.fleet_management_backend.entity.enums.MaintenanceType;
 import com.fleet_management_backend.entity.enums.DeliveryStatus;
 import com.fleet_management_backend.entity.enums.TrailerStatus;
 import com.fleet_management_backend.entity.enums.TripStatus;
@@ -37,8 +39,11 @@ public class TripService {
     private final TruckRepository truckRepository;
     private final TrailerRepository trailerRepository;
     private final DeliveryRepository deliveryRepository;
+    private final MaintenanceRepository maintenanceRepository;
     private final TripMapper tripMapper;
     private final DistanceService distanceService;
+
+    private static final BigDecimal MAINTENANCE_THRESHOLD_KM = new BigDecimal("50000");
 
     @Transactional
     public TripResponse createTrip(TripRequest request, UUID createdByUserId) {
@@ -207,7 +212,8 @@ public class TripService {
             }
         }
 
-        // Reference is preserved — only updated above if a new one was explicitly provided
+        // Reference is preserved — only updated above if a new one was explicitly
+        // provided
         trip.setStartDate(request.getStartDate());
         trip.setEndDate(request.getEndDate());
         trip.setStatus(request.getStatus());
@@ -243,10 +249,15 @@ public class TripService {
                 // Update truck mileage when trip is completed
                 if (isNowFinished && !wasFinished && request.getStatus() == TripStatus.COMPLETED
                         && trip.getTotalDistance() != null && trip.getTotalDistance().compareTo(BigDecimal.ZERO) > 0) {
-                    BigDecimal currentMileage = oldTruck.getTotalMileage() != null ? oldTruck.getTotalMileage() : BigDecimal.ZERO;
-                    oldTruck.setTotalMileage(currentMileage.add(trip.getTotalDistance()));
+                    BigDecimal currentMileage = oldTruck.getTotalMileage() != null ? oldTruck.getTotalMileage()
+                            : BigDecimal.ZERO;
+                    BigDecimal newMileage = currentMileage.add(trip.getTotalDistance());
+                    oldTruck.setTotalMileage(newMileage);
                     log.info("Truck {} mileage updated: {} -> {} km", oldTruck.getRegistrationNumber(),
-                            currentMileage, oldTruck.getTotalMileage());
+                            currentMileage, newMileage);
+
+                    // Check if truck crossed a 50,000 km threshold → auto-maintenance
+                    checkAndCreateAutoMaintenance(oldTruck, currentMileage, newMileage);
                 }
 
                 truckRepository.save(oldTruck);
@@ -452,10 +463,15 @@ public class TripService {
 
                 // Update mileage with trip distance
                 if (tripDistance.compareTo(BigDecimal.ZERO) > 0) {
-                    BigDecimal m = truck.getTotalMileage() != null ? truck.getTotalMileage() : BigDecimal.ZERO;
-                    truck.setTotalMileage(m.add(tripDistance));
+                    BigDecimal currentMileage = truck.getTotalMileage() != null ? truck.getTotalMileage()
+                            : BigDecimal.ZERO;
+                    BigDecimal newMileage = currentMileage.add(tripDistance);
+                    truck.setTotalMileage(newMileage);
                     log.info("Truck {} mileage updated: {} -> {} km",
-                            truck.getRegistrationNumber(), m, truck.getTotalMileage());
+                            truck.getRegistrationNumber(), currentMileage, newMileage);
+
+                    // Check if truck crossed a 50,000 km threshold → auto-maintenance
+                    checkAndCreateAutoMaintenance(truck, currentMileage, newMileage);
                 }
 
                 truckRepository.save(truck);
@@ -535,5 +551,35 @@ public class TripService {
         }
 
         return totalDistance;
+    }
+
+    /**
+     * Check if the truck crossed a 50,000 km maintenance threshold.
+     * If so, create a PREVENTIVE maintenance (vidange) and set truck status to
+     * IN_MAINTENANCE.
+     */
+    private void checkAndCreateAutoMaintenance(Truck truck, BigDecimal oldMileage, BigDecimal newMileage) {
+        BigDecimal oldThresholds = oldMileage.divideToIntegralValue(MAINTENANCE_THRESHOLD_KM);
+        BigDecimal newThresholds = newMileage.divideToIntegralValue(MAINTENANCE_THRESHOLD_KM);
+
+        if (newThresholds.compareTo(oldThresholds) > 0) {
+            // Truck crossed a 50k km boundary → schedule maintenance
+            truck.setStatus(TruckStatus.IN_MAINTENANCE);
+
+            Maintenance maintenance = new Maintenance();
+            maintenance.setTruck(truck);
+            maintenance.setType(MaintenanceType.PREVENTIVE);
+            maintenance.setStatus(MaintenanceStatus.PLANNED);
+            maintenance.setDateMaintenance(java.time.LocalDate.now());
+            maintenance.setDescription("Vidange automatique — kilométrage a dépassé "
+                    + newThresholds.multiply(MAINTENANCE_THRESHOLD_KM).toPlainString() + " km");
+            maintenance.setReference("MNT-AUTO-" + truck.getRegistrationNumber() + "-"
+                    + newThresholds.multiply(MAINTENANCE_THRESHOLD_KM).toPlainString() + "KM");
+
+            maintenanceRepository.save(maintenance);
+            log.info("⚠️ Auto-maintenance created for truck {} at {} km (threshold: {} km)",
+                    truck.getRegistrationNumber(), newMileage.toPlainString(),
+                    newThresholds.multiply(MAINTENANCE_THRESHOLD_KM).toPlainString());
+        }
     }
 }

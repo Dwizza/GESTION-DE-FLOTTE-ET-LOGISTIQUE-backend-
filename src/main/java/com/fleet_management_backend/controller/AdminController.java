@@ -64,7 +64,8 @@ public class AdminController {
     }
 
     @GetMapping("/managers/page")
-    public ResponseEntity<PaginatedResponse<ManagerResponse>> getPaginatedManagers(@PageableDefault(size = 10) Pageable pageable) {
+    public ResponseEntity<PaginatedResponse<ManagerResponse>> getPaginatedManagers(
+            @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(adminService.getPaginatedManagers(pageable));
     }
 
@@ -87,7 +88,8 @@ public class AdminController {
     }
 
     @GetMapping("/drivers/page")
-    public ResponseEntity<PaginatedResponse<DriverResponse>> getPaginatedDrivers(@PageableDefault(size = 10) Pageable pageable) {
+    public ResponseEntity<PaginatedResponse<DriverResponse>> getPaginatedDrivers(
+            @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(driverService.getPaginatedDrivers(pageable));
     }
 
@@ -133,7 +135,8 @@ public class AdminController {
     }
 
     @GetMapping("/clients/page")
-    public ResponseEntity<PaginatedResponse<ClientResponse>> getPaginatedClients(@PageableDefault(size = 10) Pageable pageable) {
+    public ResponseEntity<PaginatedResponse<ClientResponse>> getPaginatedClients(
+            @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(adminService.getPaginatedClients(pageable));
     }
 

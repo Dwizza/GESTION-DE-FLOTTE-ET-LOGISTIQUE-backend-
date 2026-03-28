@@ -4,7 +4,9 @@ import com.fleet_management_backend.dto.request.RegisterManagerRequest;
 import com.fleet_management_backend.dto.response.RegisterManagerResponse;
 import com.fleet_management_backend.entity.User;
 import com.fleet_management_backend.entity.enums.Role;
+import com.fleet_management_backend.exception.BadRequestException;
 import com.fleet_management_backend.exception.ConflictException;
+import com.fleet_management_backend.exception.ResourceNotFoundException;
 import com.fleet_management_backend.mapper.UserMapper;
 import com.fleet_management_backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -57,10 +59,10 @@ public class AdminService {
 
     public void DeleteManager(UUID managerId) {
         User manager = userRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Manager not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Manager not found"));
 
         if (manager.getRole() != Role.LOGISTICS_MANAGER) {
-            throw new RuntimeException("User is not a logistics manager");
+            throw new BadRequestException("User is not a logistics manager");
         }
 
         userRepository.delete(manager);
@@ -75,10 +77,10 @@ public class AdminService {
 
     public com.fleet_management_backend.dto.response.ManagerResponse getManagerById(UUID managerId) {
         User manager = userRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Manager not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Manager not found"));
 
         if (manager.getRole() != Role.LOGISTICS_MANAGER) {
-            throw new RuntimeException("User is not a logistics manager");
+            throw new BadRequestException("User is not a logistics manager");
         }
 
         return userMapper.toManagerResponse(manager);
@@ -88,10 +90,10 @@ public class AdminService {
     public com.fleet_management_backend.dto.response.ManagerResponse updateManager(UUID managerId,
             com.fleet_management_backend.dto.request.UpdateManagerRequest request) {
         User manager = userRepository.findById(managerId)
-                .orElseThrow(() -> new RuntimeException("Manager not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Manager not found"));
 
         if (manager.getRole() != Role.LOGISTICS_MANAGER) {
-            throw new RuntimeException("User is not a logistics manager");
+            throw new BadRequestException("User is not a logistics manager");
         }
 
         manager.setFirstName(request.getFirstName());
@@ -128,7 +130,7 @@ public class AdminService {
     @Transactional
     public ClientResponse updateClient(UUID clientId, UpdateClientRequest request) {
         Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new RuntimeException("Client not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Client not found"));
 
         client.setCompanyName(request.getCompanyName());
         client.setAddress(request.getAddress());
@@ -149,7 +151,7 @@ public class AdminService {
     @Transactional
     public void deleteClient(UUID clientId) {
         Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new RuntimeException("Client not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Client not found"));
 
         // Ensure to delete trips or throw explicit conflict if related rows exist
         if (!client.getTrips().isEmpty()) {

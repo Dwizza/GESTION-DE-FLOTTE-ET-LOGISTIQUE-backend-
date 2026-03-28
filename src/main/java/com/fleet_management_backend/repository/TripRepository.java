@@ -20,5 +20,6 @@ public interface TripRepository extends JpaRepository<Trip, UUID> {
 
     List<Trip> findByDriverIdOrderByStartDateDesc(UUID driverId);
 
-    org.springframework.data.domain.Page<Trip> findByDriverId(UUID driverId, org.springframework.data.domain.Pageable pageable);
+    org.springframework.data.domain.Page<Trip> findByDriverId(UUID driverId,
+            org.springframework.data.domain.Pageable pageable);
 }

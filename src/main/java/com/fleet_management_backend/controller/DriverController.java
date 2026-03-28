@@ -1,6 +1,7 @@
 package com.fleet_management_backend.controller;
 
 import com.fleet_management_backend.dto.response.TripResponse;
+import com.fleet_management_backend.exception.ResourceNotFoundException;
 import com.fleet_management_backend.entity.Driver;
 import com.fleet_management_backend.entity.User;
 import com.fleet_management_backend.repository.DriverRepository;
@@ -65,8 +66,8 @@ public class DriverController {
     private Driver getAuthenticatedDriver(Authentication authentication) {
         String email = authentication.getName();
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found"));
         return driverRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Driver profile not found for user"));
+                .orElseThrow(() -> new ResourceNotFoundException("Driver profile not found for user"));
     }
 }

@@ -7,6 +7,7 @@ import com.fleet_management_backend.dto.response.RegisterClientResponse;
 import com.fleet_management_backend.entity.Client;
 import com.fleet_management_backend.entity.User;
 import com.fleet_management_backend.entity.enums.Role;
+import com.fleet_management_backend.exception.BadRequestException;
 import com.fleet_management_backend.exception.ConflictException;
 import com.fleet_management_backend.mapper.ClientMapper;
 import com.fleet_management_backend.mapper.UserMapper;
@@ -36,10 +37,10 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new BadRequestException("Invalid credentials"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new BadRequestException("Invalid credentials");
         }
 
         Map<String, Object> claims = new HashMap<>();

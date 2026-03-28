@@ -8,6 +8,7 @@ import com.fleet_management_backend.entity.Driver;
 import com.fleet_management_backend.entity.User;
 import com.fleet_management_backend.entity.enums.Role;
 import com.fleet_management_backend.exception.ConflictException;
+import com.fleet_management_backend.exception.ResourceNotFoundException;
 import com.fleet_management_backend.mapper.DriverMapper;
 import com.fleet_management_backend.mapper.UserMapper;
 import com.fleet_management_backend.repository.DriverRepository;
@@ -60,7 +61,7 @@ public class DriverService {
     @Transactional
     public void deleteDriver(UUID driverId) {
         Driver driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Driver not found"));
         User user = driver.getUser();
 
         driverRepository.delete(driver);
@@ -77,14 +78,14 @@ public class DriverService {
 
     public DriverResponse getDriverById(UUID driverId) {
         Driver driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Driver not found"));
         return driverMapper.toDriverResponse(driver);
     }
 
     @Transactional
     public DriverResponse updateDriver(UUID driverId, UpdateDriverRequest request) {
         Driver driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new RuntimeException("Driver not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Driver not found"));
 
         User user = driver.getUser();
         user.setFirstName(request.getFirstName());

@@ -97,7 +97,8 @@ public class DeliveryService {
                                 && !delivery.getReference().equals(request.getReference())) {
                         if (deliveryRepository.existsByReference(request.getReference())) {
                                 throw new ConflictException(
-                                                "Delivery with reference " + request.getReference() + " already exists.");
+                                                "Delivery with reference " + request.getReference()
+                                                                + " already exists.");
                         }
                         delivery.setReference(request.getReference());
                 }
