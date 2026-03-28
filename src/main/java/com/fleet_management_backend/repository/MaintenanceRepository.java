@@ -9,4 +9,7 @@ import java.util.UUID;
 @Repository
 public interface MaintenanceRepository extends JpaRepository<Maintenance, UUID> {
     boolean existsByReference(String reference);
+
+    @org.springframework.data.jpa.repository.Query("SELECT SUM(m.cout) FROM Maintenance m")
+    java.math.BigDecimal sumTotalMaintenanceCost();
 }

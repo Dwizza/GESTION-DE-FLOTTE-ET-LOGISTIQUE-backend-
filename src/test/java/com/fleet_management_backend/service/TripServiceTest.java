@@ -56,11 +56,11 @@ class TripServiceTest {
     @Mock
     private DeliveryRepository deliveryRepository;
     @Mock
-    private MaintenanceRepository maintenanceRepository;
-    @Mock
     private TripMapper tripMapper;
     @Mock
     private DistanceService distanceService;
+    @Mock
+    private CapacityValidationService capacityValidationService;
     @Mock
     private MaintenanceService maintenanceService;
 
@@ -79,10 +79,9 @@ class TripServiceTest {
                 truckRepository,
                 trailerRepository,
                 deliveryRepository,
-                maintenanceRepository,
                 tripMapper,
                 distanceService,
-                new CapacityValidationService(),
+                capacityValidationService,
                 maintenanceService);
 
         driver = new Driver();

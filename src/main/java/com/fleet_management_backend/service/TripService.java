@@ -4,8 +4,6 @@ import com.fleet_management_backend.dto.request.TripRequest;
 import com.fleet_management_backend.dto.response.PaginatedResponse;
 import com.fleet_management_backend.dto.response.TripResponse;
 import com.fleet_management_backend.entity.*;
-import com.fleet_management_backend.entity.enums.MaintenanceStatus;
-import com.fleet_management_backend.entity.enums.MaintenanceType;
 import com.fleet_management_backend.entity.enums.DeliveryStatus;
 import com.fleet_management_backend.entity.enums.TrailerStatus;
 import com.fleet_management_backend.entity.enums.TripStatus;
@@ -18,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import com.fleet_management_backend.service.CapacityValidationService;
-import com.fleet_management_backend.service.MaintenanceService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,13 +37,12 @@ public class TripService {
     private final TruckRepository truckRepository;
     private final TrailerRepository trailerRepository;
     private final DeliveryRepository deliveryRepository;
-    private final MaintenanceRepository maintenanceRepository;
     private final TripMapper tripMapper;
     private final DistanceService distanceService;
     private final CapacityValidationService capacityValidationService;
     private final MaintenanceService maintenanceService;
 
-    private static final BigDecimal MAINTENANCE_THRESHOLD_KM = new BigDecimal("50000");
+
 
     @Transactional
     public TripResponse createTrip(TripRequest request, UUID createdByUserId) {

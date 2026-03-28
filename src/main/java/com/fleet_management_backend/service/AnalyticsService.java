@@ -31,64 +31,35 @@ public class AnalyticsService {
                 response.setTotalTrucks(truckRepository.count());
                 response.setTotalTrailers(trailerRepository.count());
                 response.setTotalDrivers(driverRepository.count());
-
-                long availableDrivers = driverRepository.findAll().stream()
-                                .filter(d -> Boolean.TRUE.equals(d.getAvailable()))
-                                .count();
-                response.setAvailableDrivers(availableDrivers);
-
-                long activeTrips = tripRepository.findAll().stream()
-                                .filter(t -> t.getStatus() == TripStatus.ONGOING)
-                                .count();
-                response.setActiveTrips(activeTrips);
+                response.setAvailableDrivers(driverRepository.countByAvailableTrue());
+                response.setActiveTrips(tripRepository.countByStatus(TripStatus.ONGOING));
 
                 // --- Financial ---
-                BigDecimal totalRevenue = deliveryRepository.findAll().stream()
-                                .map(d -> d.getPrix() != null ? d.getPrix() : BigDecimal.ZERO)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
-                response.setTotalRevenue(totalRevenue);
+                BigDecimal totalRevenue = deliveryRepository.sumTotalRevenue();
+                response.setTotalRevenue(totalRevenue != null ? totalRevenue : BigDecimal.ZERO);
 
-                BigDecimal totalFuelCost = carburantRepository.findAll().stream()
-                                .map(c -> c.getCout() != null ? c.getCout() : BigDecimal.ZERO)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
-                response.setTotalFuelCost(totalFuelCost);
+                BigDecimal totalFuelCost = carburantRepository.sumTotalFuelCost();
+                response.setTotalFuelCost(totalFuelCost != null ? totalFuelCost : BigDecimal.ZERO);
 
-                BigDecimal totalMaintenanceCost = maintenanceRepository.findAll().stream()
-                                .map(m -> m.getCout() != null ? m.getCout() : BigDecimal.ZERO)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
-                response.setTotalMaintenanceCost(totalMaintenanceCost);
+                BigDecimal totalMaintenanceCost = maintenanceRepository.sumTotalMaintenanceCost();
+                response.setTotalMaintenanceCost(totalMaintenanceCost != null ? totalMaintenanceCost : BigDecimal.ZERO);
 
-                BigDecimal totalExpenses = totalFuelCost.add(totalMaintenanceCost);
-                response.setTotalProfit(totalRevenue.subtract(totalExpenses));
+                response.setTotalProfit(response.getTotalRevenue().subtract(
+                        response.getTotalFuelCost().add(response.getTotalMaintenanceCost())));
 
-                // --- Chart: Trucks by Status ---
-                Map<String, Long> trucksByStatus = truckRepository.findAll().stream()
-                                .collect(Collectors.groupingBy(
-                                                t -> t.getStatus().name(),
-                                                Collectors.counting()));
-                response.setTrucksByStatus(trucksByStatus);
-
-                // --- Chart: Trips by Status ---
-                Map<String, Long> tripsByStatus = tripRepository.findAll().stream()
-                                .collect(Collectors.groupingBy(
-                                                t -> t.getStatus().name(),
-                                                Collectors.counting()));
-                response.setTripsByStatus(tripsByStatus);
-
-                // --- Chart: Trucks by Brand ---
-                Map<String, Long> trucksByBrand = truckRepository.findAll().stream()
-                                .collect(Collectors.groupingBy(
-                                                t -> t.getBrand() != null ? t.getBrand() : "Autre",
-                                                Collectors.counting()));
-                response.setTrucksByBrand(trucksByBrand);
-
-                // --- Chart: Trailers by Type ---
-                Map<String, Long> trailersByType = trailerRepository.findAll().stream()
-                                .collect(Collectors.groupingBy(
-                                                t -> t.getType().name(),
-                                                Collectors.counting()));
-                response.setTrailersByType(trailersByType);
+                // --- Charts (Optimized Grouping) ---
+                response.setTrucksByStatus(convertListToMap(truckRepository.countTrucksByStatus()));
+                response.setTripsByStatus(convertListToMap(tripRepository.countTripsByStatus()));
+                response.setTrucksByBrand(convertListToMap(truckRepository.countTrucksByBrand()));
+                response.setTrailersByType(convertListToMap(trailerRepository.countTrailersByType()));
 
                 return response;
+        }
+
+        private Map<String, Long> convertListToMap(java.util.List<Object[]> results) {
+                return results.stream()
+                                .collect(Collectors.toMap(
+                                                row -> row[0].toString(),
+                                                row -> (Long) row[1]));
         }
 }

@@ -8,4 +8,6 @@ import java.util.UUID;
 
 @Repository
 public interface CarburantTransactionRepository extends JpaRepository<CarburantTransaction, UUID> {
+    @org.springframework.data.jpa.repository.Query("SELECT SUM(c.cout) FROM CarburantTransaction c")
+    java.math.BigDecimal sumTotalFuelCost();
 }

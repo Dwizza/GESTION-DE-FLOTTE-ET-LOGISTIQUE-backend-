@@ -8,7 +8,6 @@ import com.fleet_management_backend.entity.Trip;
 import com.fleet_management_backend.exception.ConflictException;
 import com.fleet_management_backend.exception.ResourceNotFoundException;
 import com.fleet_management_backend.mapper.DeliveryMapper;
-import com.fleet_management_backend.service.CapacityValidationService;
 import com.fleet_management_backend.repository.DeliveryCategoryRepository;
 import com.fleet_management_backend.repository.DeliveryRepository;
 import com.fleet_management_backend.repository.TripRepository;

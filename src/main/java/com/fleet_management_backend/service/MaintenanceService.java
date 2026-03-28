@@ -58,13 +58,11 @@ public class MaintenanceService {
 
             maintenance.setTruck(truck);
 
-            // Logique métier: Changement d'état du camion vers "Maintenance" durant
-            // l'intervention
-            if (request.getStatus() == com.fleet_management_backend.entity.enums.MaintenanceStatus.IN_PROGRESS
-                    || request.getStatus() == com.fleet_management_backend.entity.enums.MaintenanceStatus.PLANNED) {
+            if (request.getStatus() == MaintenanceStatus.IN_PROGRESS
+                    || request.getStatus() == MaintenanceStatus.PLANNED) {
                 truck.setStatus(TruckStatus.IN_MAINTENANCE);
                 truckRepository.save(truck);
-            } else if (request.getStatus() == com.fleet_management_backend.entity.enums.MaintenanceStatus.COMPLETED) {
+            } else if (request.getStatus() == MaintenanceStatus.COMPLETED) {
                 truck.setStatus(TruckStatus.AVAILABLE);
                 truckRepository.save(truck);
             }
@@ -81,11 +79,11 @@ public class MaintenanceService {
 
             maintenance.setTrailer(trailer);
 
-            if (request.getStatus() == com.fleet_management_backend.entity.enums.MaintenanceStatus.IN_PROGRESS
-                    || request.getStatus() == com.fleet_management_backend.entity.enums.MaintenanceStatus.PLANNED) {
+            if (request.getStatus() == MaintenanceStatus.IN_PROGRESS
+                    || request.getStatus() == MaintenanceStatus.PLANNED) {
                 trailer.setStatus(TrailerStatus.IN_MAINTENANCE);
                 trailerRepository.save(trailer);
-            } else if (request.getStatus() == com.fleet_management_backend.entity.enums.MaintenanceStatus.COMPLETED) {
+            } else if (request.getStatus() == MaintenanceStatus.COMPLETED) {
                 trailer.setStatus(TrailerStatus.AVAILABLE);
                 trailerRepository.save(trailer);
             }
@@ -132,10 +130,10 @@ public class MaintenanceService {
 
         if (maintenance.getTruck() != null) {
             Truck truck = maintenance.getTruck();
-            if (request.getStatus() == com.fleet_management_backend.entity.enums.MaintenanceStatus.IN_PROGRESS
-                    || request.getStatus() == com.fleet_management_backend.entity.enums.MaintenanceStatus.PLANNED) {
+            if (request.getStatus() == MaintenanceStatus.IN_PROGRESS
+                    || request.getStatus() == MaintenanceStatus.PLANNED) {
                 truck.setStatus(TruckStatus.IN_MAINTENANCE);
-            } else if (request.getStatus() == com.fleet_management_backend.entity.enums.MaintenanceStatus.COMPLETED) {
+            } else if (request.getStatus() == MaintenanceStatus.COMPLETED) {
                 truck.setStatus(TruckStatus.AVAILABLE);
             }
             truckRepository.save(truck);
@@ -143,10 +141,10 @@ public class MaintenanceService {
 
         if (maintenance.getTrailer() != null) {
             Trailer trailer = maintenance.getTrailer();
-            if (request.getStatus() == com.fleet_management_backend.entity.enums.MaintenanceStatus.IN_PROGRESS
-                    || request.getStatus() == com.fleet_management_backend.entity.enums.MaintenanceStatus.PLANNED) {
+            if (request.getStatus() == MaintenanceStatus.IN_PROGRESS
+                    || request.getStatus() == MaintenanceStatus.PLANNED) {
                 trailer.setStatus(TrailerStatus.IN_MAINTENANCE);
-            } else if (request.getStatus() == com.fleet_management_backend.entity.enums.MaintenanceStatus.COMPLETED) {
+            } else if (request.getStatus() == MaintenanceStatus.COMPLETED) {
                 trailer.setStatus(TrailerStatus.AVAILABLE);
             }
             trailerRepository.save(trailer);
@@ -189,7 +187,7 @@ public class MaintenanceService {
         BigDecimal newThresholds = newMileage.divideToIntegralValue(threshold);
 
         if (newThresholds.compareTo(currentThresholds) > 0) {
-            truck.setStatus(com.fleet_management_backend.entity.enums.TruckStatus.IN_MAINTENANCE);
+            truck.setStatus(TruckStatus.IN_MAINTENANCE);
             truckRepository.save(truck);
 
             String ref = "MNT-AUTO-" + truck.getRegistrationNumber() + "-"
@@ -198,8 +196,8 @@ public class MaintenanceService {
             if (!maintenanceRepository.existsByReference(ref)) {
                 Maintenance maintenance = new Maintenance();
                 maintenance.setTruck(truck);
-                maintenance.setType(com.fleet_management_backend.entity.enums.MaintenanceType.PREVENTIVE);
-                maintenance.setStatus(com.fleet_management_backend.entity.enums.MaintenanceStatus.PLANNED);
+                maintenance.setType(MaintenanceType.PREVENTIVE);
+                maintenance.setStatus(MaintenanceStatus.PLANNED);
                 maintenance.setDateMaintenance(java.time.LocalDate.now());
                 maintenance.setReference(ref);
                 maintenance.setDescription("Vidange automatique - kilométrage a dépassé "

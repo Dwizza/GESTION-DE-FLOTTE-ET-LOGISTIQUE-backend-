@@ -22,4 +22,9 @@ public interface TripRepository extends JpaRepository<Trip, UUID> {
 
     org.springframework.data.domain.Page<Trip> findByDriverId(UUID driverId,
             org.springframework.data.domain.Pageable pageable);
+
+    long countByStatus(TripStatus status);
+
+    @Query("SELECT t.status, COUNT(t) FROM Trip t GROUP BY t.status")
+    List<Object[]> countTripsByStatus();
 }

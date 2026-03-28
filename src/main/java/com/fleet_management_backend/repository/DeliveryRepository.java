@@ -11,4 +11,7 @@ public interface DeliveryRepository extends JpaRepository<Delivery, UUID> {
     boolean existsByReference(String reference);
 
     java.util.List<Delivery> findByTripId(UUID tripId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT SUM(d.prix) FROM Delivery d")
+    java.math.BigDecimal sumTotalRevenue();
 }
