@@ -118,7 +118,9 @@ public class MaintenanceService {
         maintenance.setType(request.getType());
         maintenance.setDateMaintenance(request.getDateMaintenance());
         maintenance.setCout(request.getCout());
-        maintenance.setReference(request.getReference());
+        if (request.getReference() != null && !request.getReference().trim().isEmpty()) {
+            maintenance.setReference(request.getReference());
+        }
         maintenance.setDescription(request.getDescription());
         maintenance.setPerformedBy(request.getPerformedBy());
 

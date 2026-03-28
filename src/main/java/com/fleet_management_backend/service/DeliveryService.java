@@ -93,10 +93,13 @@ public class DeliveryService {
                 Delivery delivery = deliveryRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException("Delivery not found"));
 
-                if (!delivery.getReference().equals(request.getReference()) &&
-                                deliveryRepository.existsByReference(request.getReference())) {
-                        throw new ConflictException(
-                                        "Delivery with reference " + request.getReference() + " already exists.");
+                if (request.getReference() != null && !request.getReference().trim().isEmpty()
+                                && !delivery.getReference().equals(request.getReference())) {
+                        if (deliveryRepository.existsByReference(request.getReference())) {
+                                throw new ConflictException(
+                                                "Delivery with reference " + request.getReference() + " already exists.");
+                        }
+                        delivery.setReference(request.getReference());
                 }
 
                 Trip trip = tripRepository.findById(request.getTripId())
@@ -104,7 +107,6 @@ public class DeliveryService {
 
                 validateTripCapacity(trip, request.getWeight(), request.getVolume(), id);
 
-                delivery.setReference(request.getReference());
                 delivery.setWeight(request.getWeight());
                 delivery.setVolume(request.getVolume());
                 delivery.setPrix(request.getPrix());

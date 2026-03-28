@@ -163,9 +163,12 @@ public class TripService {
         Trip trip = tripRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
 
-        if (!trip.getReference().equals(request.getReference()) &&
-                tripRepository.existsByReference(request.getReference())) {
-            throw new ConflictException("Trip with reference " + request.getReference() + " already exists.");
+        if (request.getReference() != null && !request.getReference().trim().isEmpty()
+                && !trip.getReference().equals(request.getReference())) {
+            if (tripRepository.existsByReference(request.getReference())) {
+                throw new ConflictException("Trip with reference " + request.getReference() + " already exists.");
+            }
+            trip.setReference(request.getReference());
         }
 
         Client client = clientRepository.findById(request.getClientId())
@@ -204,7 +207,7 @@ public class TripService {
             }
         }
 
-        trip.setReference(request.getReference());
+        // Reference is preserved — only updated above if a new one was explicitly provided
         trip.setStartDate(request.getStartDate());
         trip.setEndDate(request.getEndDate());
         trip.setStatus(request.getStatus());
@@ -267,7 +270,7 @@ public class TripService {
                 TripTruck tripTruck = new TripTruck();
                 tripTruck.setTrip(trip);
                 tripTruck.setTruck(truck);
-                tripTruck.setReference(request.getReference() + "-TRK-" + truck.getRegistrationNumber());
+                tripTruck.setReference(trip.getReference() + "-TRK-" + truck.getRegistrationNumber());
                 trip.getTripTrucks().add(tripTruck);
             }
         }
@@ -300,7 +303,7 @@ public class TripService {
                 TripTrailer tripTrailer = new TripTrailer();
                 tripTrailer.setTrip(trip);
                 tripTrailer.setTrailer(trailer);
-                tripTrailer.setReference(request.getReference() + "-TRL-" + trailer.getId().toString().substring(0, 4));
+                tripTrailer.setReference(trip.getReference() + "-TRL-" + trailer.getId().toString().substring(0, 4));
                 trip.getTripTrailers().add(tripTrailer);
             }
         } else {

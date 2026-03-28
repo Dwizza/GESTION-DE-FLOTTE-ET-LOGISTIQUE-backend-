@@ -79,7 +79,9 @@ public class CarburantService {
         Truck truck = truckRepository.findById(request.getTruckId())
                 .orElseThrow(() -> new ResourceNotFoundException("Truck not found"));
 
-        transaction.setReference(request.getReference());
+        if (request.getReference() != null && !request.getReference().trim().isEmpty()) {
+            transaction.setReference(request.getReference());
+        }
         transaction.setDateHeure(request.getDateHeure());
         transaction.setQuantite(request.getQuantite());
         transaction.setCout(request.getCout());
