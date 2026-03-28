@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.fleet_management_backend.dto.response.PaginatedResponse;
-import com.fleet_management_backend.entity.CarburantTransaction;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
