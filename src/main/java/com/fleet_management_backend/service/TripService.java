@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import com.fleet_management_backend.service.CapacityValidationService;
+import com.fleet_management_backend.service.MaintenanceService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +44,8 @@ public class TripService {
     private final MaintenanceRepository maintenanceRepository;
     private final TripMapper tripMapper;
     private final DistanceService distanceService;
+    private final CapacityValidationService capacityValidationService;
+    private final MaintenanceService maintenanceService;
 
     private static final BigDecimal MAINTENANCE_THRESHOLD_KM = new BigDecimal("50000");
 
@@ -257,7 +261,7 @@ public class TripService {
                             currentMileage, newMileage);
 
                     // Check if truck crossed a 50,000 km threshold → auto-maintenance
-                    checkAndCreateAutoMaintenance(oldTruck, currentMileage, newMileage);
+                    maintenanceService.triggerAutoMaintenance(oldTruck, currentMileage, newMileage);
                 }
 
                 truckRepository.save(oldTruck);
@@ -300,7 +304,7 @@ public class TripService {
                             .orElseThrow(() -> new ResourceNotFoundException("Trailer not found")))
                     .collect(Collectors.toList());
 
-            validateDeliveriesCapacity(trip, updatedTrailers);
+            capacityValidationService.validateTrailerCapacityForExistingDeliveries(trip, updatedTrailers);
 
             for (Trailer trailer : updatedTrailers) {
                 if (!isNowFinished) {
@@ -318,7 +322,7 @@ public class TripService {
                 trip.getTripTrailers().add(tripTrailer);
             }
         } else {
-            validateDeliveriesCapacity(trip, List.of());
+            capacityValidationService.validateTrailerCapacityForExistingDeliveries(trip, List.of());
         }
 
         Trip updatedTrip = tripRepository.save(trip);
@@ -471,7 +475,7 @@ public class TripService {
                             truck.getRegistrationNumber(), currentMileage, newMileage);
 
                     // Check if truck crossed a 50,000 km threshold → auto-maintenance
-                    checkAndCreateAutoMaintenance(truck, currentMileage, newMileage);
+                    maintenanceService.triggerAutoMaintenance(truck, currentMileage, newMileage);
                 }
 
                 truckRepository.save(truck);
@@ -488,38 +492,6 @@ public class TripService {
 
         Trip savedTrip = tripRepository.save(trip);
         return tripMapper.toResponse(savedTrip);
-    }
-
-    private void validateDeliveriesCapacity(Trip trip, List<Trailer> newTrailers) {
-        if (trip.getDeliveries() == null || trip.getDeliveries().isEmpty())
-            return;
-
-        BigDecimal totalWeight = trip.getDeliveries().stream()
-                .map(d -> d.getWeight() != null ? d.getWeight() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal totalVolume = trip.getDeliveries().stream()
-                .map(d -> d.getVolume() != null ? d.getVolume() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal maxWeight = newTrailers.stream()
-                .map(t -> t.getMaxWeight() != null ? t.getMaxWeight() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal maxVolume = newTrailers.stream()
-                .map(t -> t.getMaxVolume() != null ? t.getMaxVolume() : BigDecimal.ZERO)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        if (totalWeight.compareTo(maxWeight) > 0) {
-            throw new ConflictException(
-                    "Assigned trailers do not have enough weight capacity for the existing deliveries. Total needed: "
-                            + totalWeight + ", Available: " + maxWeight);
-        }
-        if (totalVolume.compareTo(maxVolume) > 0) {
-            throw new ConflictException(
-                    "Assigned trailers do not have enough volume capacity for the existing deliveries. Total needed: "
-                            + totalVolume + ", Available: " + maxVolume);
-        }
     }
 
     /**
@@ -551,35 +523,5 @@ public class TripService {
         }
 
         return totalDistance;
-    }
-
-    /**
-     * Check if the truck crossed a 50,000 km maintenance threshold.
-     * If so, create a PREVENTIVE maintenance (vidange) and set truck status to
-     * IN_MAINTENANCE.
-     */
-    private void checkAndCreateAutoMaintenance(Truck truck, BigDecimal oldMileage, BigDecimal newMileage) {
-        BigDecimal oldThresholds = oldMileage.divideToIntegralValue(MAINTENANCE_THRESHOLD_KM);
-        BigDecimal newThresholds = newMileage.divideToIntegralValue(MAINTENANCE_THRESHOLD_KM);
-
-        if (newThresholds.compareTo(oldThresholds) > 0) {
-            // Truck crossed a 50k km boundary → schedule maintenance
-            truck.setStatus(TruckStatus.IN_MAINTENANCE);
-
-            Maintenance maintenance = new Maintenance();
-            maintenance.setTruck(truck);
-            maintenance.setType(MaintenanceType.PREVENTIVE);
-            maintenance.setStatus(MaintenanceStatus.PLANNED);
-            maintenance.setDateMaintenance(java.time.LocalDate.now());
-            maintenance.setDescription("Vidange automatique — kilométrage a dépassé "
-                    + newThresholds.multiply(MAINTENANCE_THRESHOLD_KM).toPlainString() + " km");
-            maintenance.setReference("MNT-AUTO-" + truck.getRegistrationNumber() + "-"
-                    + newThresholds.multiply(MAINTENANCE_THRESHOLD_KM).toPlainString() + "KM");
-
-            maintenanceRepository.save(maintenance);
-            log.info("⚠️ Auto-maintenance created for truck {} at {} km (threshold: {} km)",
-                    truck.getRegistrationNumber(), newMileage.toPlainString(),
-                    newThresholds.multiply(MAINTENANCE_THRESHOLD_KM).toPlainString());
-        }
     }
 }

@@ -36,24 +36,24 @@ public class AdminController {
 
     @PostMapping("/create/manager")
     public ResponseEntity<RegisterManagerResponse> createManager(@Valid @RequestBody RegisterManagerRequest request) {
-        RegisterManagerResponse manager = adminService.CreateManager(request);
+        RegisterManagerResponse manager = adminService.createManager(request);
         return ResponseEntity.ok(manager);
     }
 
     @DeleteMapping("/delete/manager/{id}")
-    public ResponseEntity<Void> DeleteManager(@PathVariable UUID id) {
-        adminService.DeleteManager(id);
+    public ResponseEntity<Void> deleteManager(@PathVariable UUID id) {
+        adminService.deleteManager(id);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/create/driver")
-    public ResponseEntity<RegisterDriverResponse> CreateDriver(@Valid @RequestBody RegisterDriverRequest request) {
+    public ResponseEntity<RegisterDriverResponse> createDriver(@Valid @RequestBody RegisterDriverRequest request) {
         RegisterDriverResponse driver = driverService.createDriver(request);
         return ResponseEntity.ok(driver);
     }
 
     @DeleteMapping("/delete/driver/{id}")
-    public ResponseEntity<Void> DeleteDriver(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteDriver(@PathVariable UUID id) {
         driverService.deleteDriver(id);
         return ResponseEntity.ok().build();
     }

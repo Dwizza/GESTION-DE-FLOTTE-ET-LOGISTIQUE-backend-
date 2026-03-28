@@ -12,6 +12,7 @@ import com.fleet_management_backend.repository.TrackingPointRepository;
 import com.fleet_management_backend.repository.TripRepository;
 import com.fleet_management_backend.repository.TruckRepository;
 import lombok.RequiredArgsConstructor;
+import com.fleet_management_backend.service.MaintenanceService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ public class TrackingService {
     private final TrackingPointRepository trackingPointRepository;
     private final TruckRepository truckRepository;
     private final TripRepository tripRepository;
+    private final MaintenanceService maintenanceService;
 
     private static final int EARTH_RADIUS_KM = 6371;
 
@@ -69,13 +71,7 @@ public class TrackingService {
             BigDecimal newMileage = currentMileage.add(distanceBd);
 
             // Auto Maintenance trigger every 50,000 km
-            BigDecimal threshold = new BigDecimal("50000");
-            BigDecimal currentThresholds = currentMileage.divideToIntegralValue(threshold);
-            BigDecimal newThresholds = newMileage.divideToIntegralValue(threshold);
-
-            if (newThresholds.compareTo(currentThresholds) > 0) {
-                truck.setStatus(TruckStatus.IN_MAINTENANCE);
-            }
+            maintenanceService.triggerAutoMaintenance(truck, currentMileage, newMileage);
 
             truck.setTotalMileage(newMileage);
             truckRepository.save(truck);

@@ -8,4 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface MaintenanceRepository extends JpaRepository<Maintenance, UUID> {
+    boolean existsByReference(String reference);
 }

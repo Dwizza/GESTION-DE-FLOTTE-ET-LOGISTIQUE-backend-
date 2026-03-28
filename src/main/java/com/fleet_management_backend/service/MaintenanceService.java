@@ -5,6 +5,8 @@ import com.fleet_management_backend.dto.response.MaintenanceResponse;
 import com.fleet_management_backend.entity.Maintenance;
 import com.fleet_management_backend.entity.Trailer;
 import com.fleet_management_backend.entity.Truck;
+import com.fleet_management_backend.entity.enums.MaintenanceStatus;
+import com.fleet_management_backend.entity.enums.MaintenanceType;
 import com.fleet_management_backend.entity.enums.TruckStatus;
 import com.fleet_management_backend.entity.enums.TrailerStatus;
 import com.fleet_management_backend.exception.ResourceNotFoundException;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.fleet_management_backend.dto.response.PaginatedResponse;
+import java.math.BigDecimal;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -177,5 +180,32 @@ public class MaintenanceService {
         }
 
         maintenanceRepository.delete(maintenance);
+    }
+
+    @Transactional
+    public void triggerAutoMaintenance(Truck truck, BigDecimal currentMileage, BigDecimal newMileage) {
+        BigDecimal threshold = new BigDecimal("50000");
+        BigDecimal currentThresholds = currentMileage.divideToIntegralValue(threshold);
+        BigDecimal newThresholds = newMileage.divideToIntegralValue(threshold);
+
+        if (newThresholds.compareTo(currentThresholds) > 0) {
+            truck.setStatus(com.fleet_management_backend.entity.enums.TruckStatus.IN_MAINTENANCE);
+            truckRepository.save(truck);
+
+            String ref = "MNT-AUTO-" + truck.getRegistrationNumber() + "-"
+                    + newThresholds.multiply(threshold).toPlainString() + "KM";
+
+            if (!maintenanceRepository.existsByReference(ref)) {
+                Maintenance maintenance = new Maintenance();
+                maintenance.setTruck(truck);
+                maintenance.setType(com.fleet_management_backend.entity.enums.MaintenanceType.PREVENTIVE);
+                maintenance.setStatus(com.fleet_management_backend.entity.enums.MaintenanceStatus.PLANNED);
+                maintenance.setDateMaintenance(java.time.LocalDate.now());
+                maintenance.setReference(ref);
+                maintenance.setDescription("Vidange automatique - kilométrage a dépassé "
+                        + newThresholds.multiply(threshold).toPlainString() + " km");
+                maintenanceRepository.save(maintenance);
+            }
+        }
     }
 }

@@ -8,6 +8,7 @@ import com.fleet_management_backend.entity.Trip;
 import com.fleet_management_backend.exception.ConflictException;
 import com.fleet_management_backend.exception.ResourceNotFoundException;
 import com.fleet_management_backend.mapper.DeliveryMapper;
+import com.fleet_management_backend.service.CapacityValidationService;
 import com.fleet_management_backend.repository.DeliveryCategoryRepository;
 import com.fleet_management_backend.repository.DeliveryRepository;
 import com.fleet_management_backend.repository.TripRepository;
@@ -33,6 +34,7 @@ public class DeliveryService {
         private final TripRepository tripRepository;
         private final DeliveryCategoryRepository categoryRepository;
         private final DeliveryMapper deliveryMapper;
+        private final CapacityValidationService capacityValidationService;
 
         @Transactional
         public DeliveryResponse createDelivery(DeliveryRequest request) {
@@ -48,7 +50,7 @@ public class DeliveryService {
                 Trip trip = tripRepository.findById(request.getTripId())
                                 .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
 
-                validateTripCapacity(trip, request.getWeight(), request.getVolume(), null);
+                capacityValidationService.validateTripCapacity(trip, request.getWeight(), request.getVolume(), null);
 
                 Delivery delivery = deliveryMapper.toEntity(request);
                 delivery.setTrip(trip);
@@ -106,7 +108,7 @@ public class DeliveryService {
                 Trip trip = tripRepository.findById(request.getTripId())
                                 .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
 
-                validateTripCapacity(trip, request.getWeight(), request.getVolume(), id);
+                capacityValidationService.validateTripCapacity(trip, request.getWeight(), request.getVolume(), id);
 
                 delivery.setWeight(request.getWeight());
                 delivery.setVolume(request.getVolume());
@@ -140,39 +142,4 @@ public class DeliveryService {
                 deliveryRepository.delete(delivery);
         }
 
-        private void validateTripCapacity(Trip trip, BigDecimal newWeight, BigDecimal newVolume,
-                        UUID excludingDeliveryId) {
-                BigDecimal totalWeight = trip.getDeliveries().stream()
-                                .filter(d -> excludingDeliveryId == null || !d.getId().equals(excludingDeliveryId))
-                                .map(d -> d.getWeight() != null ? d.getWeight() : BigDecimal.ZERO)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                                .add(newWeight != null ? newWeight : BigDecimal.ZERO);
-
-                BigDecimal totalVolume = trip.getDeliveries().stream()
-                                .filter(d -> excludingDeliveryId == null || !d.getId().equals(excludingDeliveryId))
-                                .map(d -> d.getVolume() != null ? d.getVolume() : BigDecimal.ZERO)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                                .add(newVolume != null ? newVolume : BigDecimal.ZERO);
-
-                BigDecimal maxWeight = trip.getTripTrailers().stream()
-                                .map(tt -> tt.getTrailer().getMaxWeight() != null ? tt.getTrailer().getMaxWeight()
-                                                : BigDecimal.ZERO)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                BigDecimal maxVolume = trip.getTripTrailers().stream()
-                                .map(tt -> tt.getTrailer().getMaxVolume() != null ? tt.getTrailer().getMaxVolume()
-                                                : BigDecimal.ZERO)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                if (totalWeight.compareTo(maxWeight) > 0) {
-                        throw new ConflictException(
-                                        "Total weight exceeds the maximum capacity of the assigned trailers ("
-                                                        + maxWeight + ").");
-                }
-                if (totalVolume.compareTo(maxVolume) > 0) {
-                        throw new ConflictException(
-                                        "Total volume exceeds the maximum capacity of the assigned trailers ("
-                                                        + maxVolume + ").");
-                }
-        }
 }

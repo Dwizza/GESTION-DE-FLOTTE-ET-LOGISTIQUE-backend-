@@ -22,7 +22,6 @@ import com.fleet_management_backend.dto.request.UpdateClientRequest;
 import com.fleet_management_backend.dto.response.RegisterClientResponse;
 import com.fleet_management_backend.dto.response.ClientResponse;
 import com.fleet_management_backend.entity.Client;
-import com.fleet_management_backend.mapper.ClientMapper;
 import com.fleet_management_backend.repository.ClientRepository;
 import com.fleet_management_backend.dto.response.PaginatedResponse;
 import com.fleet_management_backend.dto.response.ManagerResponse;
@@ -36,11 +35,11 @@ public class AdminService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final UserRepository userRepository;
+    private final AuthService authService;
 
     private final ClientRepository clientRepository;
-    private final ClientMapper clientMapper;
 
-    public RegisterManagerResponse CreateManager(RegisterManagerRequest request) {
+    public RegisterManagerResponse createManager(RegisterManagerRequest request) {
 
         Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
         if (existingUser.isPresent()) {
@@ -57,7 +56,7 @@ public class AdminService {
         return userMapper.toRegisterManagerDto(savedManager);
     }
 
-    public void DeleteManager(UUID managerId) {
+    public void deleteManager(UUID managerId) {
         User manager = userRepository.findById(managerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Manager not found"));
 
@@ -108,23 +107,7 @@ public class AdminService {
 
     @Transactional
     public RegisterClientResponse createClient(RegisterClientRequest req) {
-        if (userRepository.existsByEmail(req.getEmail())) {
-            throw new ConflictException("Email already exists");
-        }
-
-        User user = userMapper.toEntity(req);
-        user.setRole(Role.CLIENT);
-        user.setActive(true);
-        user.setPasswordHash(passwordEncoder.encode(req.getPassword()));
-
-        user = userRepository.save(user);
-
-        Client client = clientMapper.toEntity(req);
-        client.setUser(user);
-        client = clientRepository.save(client);
-
-        user.setClient(client);
-        return clientMapper.toRegisterClientResponse(user, client);
+        return authService.registerClient(req);
     }
 
     @Transactional
