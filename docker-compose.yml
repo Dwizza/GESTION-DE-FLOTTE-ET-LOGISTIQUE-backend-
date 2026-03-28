@@ -30,6 +30,21 @@ services:
     networks:
       - fleet_net
 
+  backend:
+    build: .
+    container_name: fleet_backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fleet_db
+      SPRING_DATASOURCE_USERNAME: fleet
+      SPRING_DATASOURCE_PASSWORD: fleet
+    depends_on:
+      - postgres
+    networks:
+      - fleet_net
+
 volumes:
   postgres_data:
   pgadmin_data:
