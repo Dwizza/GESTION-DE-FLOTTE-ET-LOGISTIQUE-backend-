@@ -1,7 +1,11 @@
+# Stack : PostgreSQL, pgAdmin, backend Spring Boot, Jenkins CI
+# Réseau fleet_net : jobs Maven (docker run) joignent postgres:5432
+name: fleet_management
+
 services:
   postgres:
     image: postgres:16
-    container_name: postgres_db
+    container_name: fleet_postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: fleet
@@ -13,10 +17,15 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - fleet_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fleet -d fleet_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   pgadmin:
     image: dpage/pgadmin4:8
-    container_name: pgadmin_fleet
+    container_name: fleet_pgadmin
     restart: unless-stopped
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
@@ -26,7 +35,8 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - fleet_net
 
@@ -34,6 +44,8 @@ services:
     build: .
     container_name: fleet_backend
     restart: unless-stopped
+    init: true
+    stop_grace_period: 30s
     ports:
       - "8080:8080"
     environment:
@@ -41,14 +53,33 @@ services:
       SPRING_DATASOURCE_USERNAME: fleet
       SPRING_DATASOURCE_PASSWORD: fleet
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    networks:
+      - fleet_net
+
+  jenkins:
+    build:
+      context: ./jenkins
+    container_name: fleet_jenkins
+    restart: unless-stopped
+    user: root
+    init: true
+    stop_grace_period: 30s
+    ports:
+      - "8081:8080"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - fleet_net
 
 volumes:
   postgres_data:
   pgadmin_data:
+  jenkins_home:
 
 networks:
   fleet_net:
+    name: fleet_net
     driver: bridge

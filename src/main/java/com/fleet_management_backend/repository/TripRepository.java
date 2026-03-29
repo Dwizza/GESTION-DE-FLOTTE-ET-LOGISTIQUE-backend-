@@ -1,6 +1,9 @@
 package com.fleet_management_backend.repository;
 
 import com.fleet_management_backend.entity.Trip;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -20,8 +23,7 @@ public interface TripRepository extends JpaRepository<Trip, UUID> {
 
     List<Trip> findByDriverIdOrderByStartDateDesc(UUID driverId);
 
-    org.springframework.data.domain.Page<Trip> findByDriverId(UUID driverId,
-            org.springframework.data.domain.Pageable pageable);
+    Page<Trip> findByDriverId(UUID driverId, Pageable pageable);
 
     long countByStatus(TripStatus status);
 

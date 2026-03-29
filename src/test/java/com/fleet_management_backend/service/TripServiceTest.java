@@ -15,7 +15,6 @@ import com.fleet_management_backend.mapper.TripMapper;
 import com.fleet_management_backend.repository.ClientRepository;
 import com.fleet_management_backend.repository.DeliveryRepository;
 import com.fleet_management_backend.repository.DriverRepository;
-import com.fleet_management_backend.repository.MaintenanceRepository;
 import com.fleet_management_backend.repository.TrailerRepository;
 import com.fleet_management_backend.repository.TripRepository;
 import com.fleet_management_backend.repository.TruckRepository;

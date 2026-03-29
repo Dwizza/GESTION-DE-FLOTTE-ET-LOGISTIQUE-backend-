@@ -6,5 +6,7 @@ target/
 *.iml
 *.log
 docker-compose.yml
+jenkins/
+Jenkinsfile
 README.md
 HELP.md
