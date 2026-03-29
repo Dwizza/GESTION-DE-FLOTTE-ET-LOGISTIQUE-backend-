@@ -58,7 +58,6 @@ class TripServiceTest {
     private TripMapper tripMapper;
     @Mock
     private DistanceService distanceService;
-    @Mock
     private CapacityValidationService capacityValidationService;
     @Mock
     private MaintenanceService maintenanceService;
@@ -71,6 +70,7 @@ class TripServiceTest {
 
     @BeforeEach
     void setUp() {
+        capacityValidationService = new CapacityValidationService();
         tripService = new TripService(
                 tripRepository,
                 driverRepository,
