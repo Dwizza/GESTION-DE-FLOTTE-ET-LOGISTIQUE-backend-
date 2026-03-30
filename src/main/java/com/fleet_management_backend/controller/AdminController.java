@@ -3,14 +3,19 @@ package com.fleet_management_backend.controller;
 import com.fleet_management_backend.dto.request.RegisterDriverRequest;
 import com.fleet_management_backend.dto.request.RegisterClientRequest;
 import com.fleet_management_backend.dto.request.UpdateClientRequest;
+import com.fleet_management_backend.dto.request.UpdateDriverRequest;
+import com.fleet_management_backend.dto.request.UpdateManagerRequest;
 import com.fleet_management_backend.dto.response.RegisterClientResponse;
 import com.fleet_management_backend.dto.request.RegisterManagerRequest;
 import com.fleet_management_backend.dto.response.ClientResponse;
 import com.fleet_management_backend.dto.response.RegisterDriverResponse;
 import com.fleet_management_backend.dto.response.RegisterManagerResponse;
+import com.fleet_management_backend.dto.response.TripResponse;
 import com.fleet_management_backend.repository.ClientRepository;
 import com.fleet_management_backend.service.AdminService;
 import com.fleet_management_backend.service.DriverService;
+import com.fleet_management_backend.service.TripService;
+
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +27,7 @@ import com.fleet_management_backend.dto.response.DriverResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 
+import java.util.List;
 import java.util.UUID;
 
 @RequestMapping("/api/admin")
@@ -31,7 +37,7 @@ public class AdminController {
 
     private final AdminService adminService;
     private final DriverService driverService;
-    private final com.fleet_management_backend.service.TripService tripService;
+    private final TripService tripService;
     private final ClientRepository clientRepository;
 
     @PostMapping("/create/manager")
@@ -59,7 +65,7 @@ public class AdminController {
     }
 
     @GetMapping("/managers")
-    public ResponseEntity<java.util.List<com.fleet_management_backend.dto.response.ManagerResponse>> getAllManagers() {
+    public ResponseEntity<List<ManagerResponse>> getAllManagers() {
         return ResponseEntity.ok(adminService.getAllManagers());
     }
 
@@ -70,20 +76,20 @@ public class AdminController {
     }
 
     @GetMapping("/manager/{id}")
-    public ResponseEntity<com.fleet_management_backend.dto.response.ManagerResponse> getManagerById(
+    public ResponseEntity<ManagerResponse> getManagerById(
             @PathVariable UUID id) {
         return ResponseEntity.ok(adminService.getManagerById(id));
     }
 
     @PutMapping("/update/manager/{id}")
-    public ResponseEntity<com.fleet_management_backend.dto.response.ManagerResponse> updateManager(
+    public ResponseEntity<ManagerResponse> updateManager(
             @PathVariable UUID id,
-            @Valid @RequestBody com.fleet_management_backend.dto.request.UpdateManagerRequest request) {
+            @Valid @RequestBody UpdateManagerRequest request) {
         return ResponseEntity.ok(adminService.updateManager(id, request));
     }
 
     @GetMapping("/drivers")
-    public ResponseEntity<java.util.List<com.fleet_management_backend.dto.response.DriverResponse>> getAllDrivers() {
+    public ResponseEntity<java.util.List<DriverResponse>> getAllDrivers() {
         return ResponseEntity.ok(driverService.getAllDrivers());
     }
 
@@ -94,25 +100,25 @@ public class AdminController {
     }
 
     @GetMapping("/driver/{id}")
-    public ResponseEntity<com.fleet_management_backend.dto.response.DriverResponse> getDriverById(
+    public ResponseEntity<DriverResponse> getDriverById(
             @PathVariable UUID id) {
         return ResponseEntity.ok(driverService.getDriverById(id));
     }
 
     @PutMapping("/update/driver/{id}")
-    public ResponseEntity<com.fleet_management_backend.dto.response.DriverResponse> updateDriver(@PathVariable UUID id,
-            @Valid @RequestBody com.fleet_management_backend.dto.request.UpdateDriverRequest request) {
+    public ResponseEntity<DriverResponse> updateDriver(@PathVariable UUID id,
+            @Valid @RequestBody UpdateDriverRequest request) {
         return ResponseEntity.ok(driverService.updateDriver(id, request));
     }
 
     @GetMapping("/driver/{id}/trips")
-    public ResponseEntity<java.util.List<com.fleet_management_backend.dto.response.TripResponse>> getDriverTrips(
+    public ResponseEntity<List<TripResponse>> getDriverTrips(
             @PathVariable UUID id) {
         return ResponseEntity.ok(tripService.getTripsByDriverId(id));
     }
 
     @GetMapping("/driver/{id}/trips/page")
-    public ResponseEntity<PaginatedResponse<com.fleet_management_backend.dto.response.TripResponse>> getPaginatedDriverTrips(
+    public ResponseEntity<PaginatedResponse<TripResponse>> getPaginatedDriverTrips(
             @PathVariable UUID id,
             @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(tripService.getPaginatedTripsByDriverId(id, pageable));
@@ -120,7 +126,7 @@ public class AdminController {
 
     @GetMapping("/clients")
     @Transactional(readOnly = true)
-    public ResponseEntity<java.util.List<ClientResponse>> getAllClients() {
+    public ResponseEntity<List<ClientResponse>> getAllClients() {
         var clients = clientRepository.findAll().stream()
                 .map(c -> ClientResponse.builder()
                         .id(c.getId())

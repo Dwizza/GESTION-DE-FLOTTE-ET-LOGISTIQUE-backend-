@@ -5,6 +5,7 @@ import com.fleet_management_backend.security.JwtService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -65,18 +66,18 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/admin/trucks/**").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
-                        .requestMatchers("/api/admin/trailers/**").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/clients", "/api/admin/clients/**").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/drivers", "/api/admin/drivers/**").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/trucks", "/api/admin/trucks/**").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/trailers", "/api/admin/trailers/**").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
+                        .requestMatchers("/api/admin/driver/**").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
+                        .requestMatchers("/api/admin/create/client").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
                         .requestMatchers("/api/manager/trips/**").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
                         .requestMatchers("/api/manager/deliveries/**").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
-                        .requestMatchers("/api/tracking/**").hasAnyRole("DRIVER", "ADMIN")
-                        .requestMatchers("/api/maintenances/**").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
-                        .requestMatchers("/api/carburants/**").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
-                        .requestMatchers("/api/analytics/**").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // .requestMatchers(HttpMethod.GET, "/api/admin/drivers").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
+                        // .requestMatchers(HttpMethod.GET, "/api/admin/clients").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
                         .requestMatchers("/api/manager/**").hasRole("LOGISTICS_MANAGER")
-                        .requestMatchers("/api/admin/clients/**").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
-                        .requestMatchers("/api/admin/create/client").hasAnyRole("ADMIN", "LOGISTICS_MANAGER")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
