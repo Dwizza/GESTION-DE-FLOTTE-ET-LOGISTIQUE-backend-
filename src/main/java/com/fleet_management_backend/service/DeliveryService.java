@@ -23,7 +23,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
@@ -56,8 +55,7 @@ public class DeliveryService {
 
                 if (request.getCategoryId() != null) {
                         DeliveryCategory category = categoryRepository.findById(request.getCategoryId())
-                                        .orElseThrow(() -> new ResourceNotFoundException(
-                                                        "Delivery Category not found"));
+                                        .orElseThrow(() -> new ResourceNotFoundException("Delivery Category not found"));
                         delivery.setCategory(category);
                 }
 
@@ -98,8 +96,7 @@ public class DeliveryService {
                                 && !delivery.getReference().equals(request.getReference())) {
                         if (deliveryRepository.existsByReference(request.getReference())) {
                                 throw new ConflictException(
-                                                "Delivery with reference " + request.getReference()
-                                                                + " already exists.");
+                                                "Delivery with reference " + request.getReference() + " already exists.");
                         }
                         delivery.setReference(request.getReference());
                 }

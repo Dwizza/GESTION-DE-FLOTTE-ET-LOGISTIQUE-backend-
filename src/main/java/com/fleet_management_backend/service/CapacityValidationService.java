@@ -1,9 +1,7 @@
 package com.fleet_management_backend.service;
 
-import com.fleet_management_backend.entity.Delivery;
 import com.fleet_management_backend.entity.Trailer;
 import com.fleet_management_backend.entity.Trip;
-import com.fleet_management_backend.entity.TripTrailer;
 import com.fleet_management_backend.exception.ConflictException;
 import org.springframework.stereotype.Service;
 

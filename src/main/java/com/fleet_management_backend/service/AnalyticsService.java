@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -56,7 +57,7 @@ public class AnalyticsService {
                 return response;
         }
 
-        private Map<String, Long> convertListToMap(java.util.List<Object[]> results) {
+        private Map<String, Long> convertListToMap(List<Object[]> results) {
                 return results.stream()
                                 .collect(Collectors.toMap(
                                                 row -> row[0].toString(),

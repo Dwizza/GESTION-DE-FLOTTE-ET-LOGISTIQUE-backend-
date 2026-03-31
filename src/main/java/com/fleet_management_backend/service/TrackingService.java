@@ -5,14 +5,12 @@ import com.fleet_management_backend.dto.response.TrackingResponse;
 import com.fleet_management_backend.entity.TrackingPoint;
 import com.fleet_management_backend.entity.Trip;
 import com.fleet_management_backend.entity.Truck;
-import com.fleet_management_backend.entity.enums.TruckStatus;
 import com.fleet_management_backend.entity.enums.TripStatus;
 import com.fleet_management_backend.exception.ResourceNotFoundException;
 import com.fleet_management_backend.repository.TrackingPointRepository;
 import com.fleet_management_backend.repository.TripRepository;
 import com.fleet_management_backend.repository.TruckRepository;
 import lombok.RequiredArgsConstructor;
-import com.fleet_management_backend.service.MaintenanceService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

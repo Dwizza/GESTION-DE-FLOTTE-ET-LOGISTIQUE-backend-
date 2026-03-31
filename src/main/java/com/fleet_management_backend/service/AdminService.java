@@ -14,11 +14,13 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import com.fleet_management_backend.dto.request.RegisterClientRequest;
 import com.fleet_management_backend.dto.request.UpdateClientRequest;
+import com.fleet_management_backend.dto.request.UpdateManagerRequest;
 import com.fleet_management_backend.dto.response.RegisterClientResponse;
 import com.fleet_management_backend.dto.response.ClientResponse;
 import com.fleet_management_backend.entity.Client;
@@ -67,14 +69,14 @@ public class AdminService {
         userRepository.delete(manager);
     }
 
-    public java.util.List<com.fleet_management_backend.dto.response.ManagerResponse> getAllManagers() {
+    public List<ManagerResponse> getAllManagers() {
         return userRepository.findAll().stream()
                 .filter(u -> u.getRole() == Role.LOGISTICS_MANAGER)
                 .map(userMapper::toManagerResponse)
                 .toList();
     }
 
-    public com.fleet_management_backend.dto.response.ManagerResponse getManagerById(UUID managerId) {
+    public ManagerResponse getManagerById(UUID managerId) {
         User manager = userRepository.findById(managerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Manager not found"));
 
@@ -86,8 +88,8 @@ public class AdminService {
     }
 
     @Transactional
-    public com.fleet_management_backend.dto.response.ManagerResponse updateManager(UUID managerId,
-            com.fleet_management_backend.dto.request.UpdateManagerRequest request) {
+    public ManagerResponse updateManager(UUID managerId,
+            UpdateManagerRequest request) {
         User manager = userRepository.findById(managerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Manager not found"));
 
